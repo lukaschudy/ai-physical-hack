@@ -21,7 +21,7 @@ export function makeBatch(index: number, suspicious: boolean, questionId?: strin
         anomalies: suspicious && i === 3 ? ["scene change"] : [],
       })),
     },
-    assessment: { suspicious, reason: suspicious ? "Scene changed mid-task" : "", confidence: 0.82 },
+    assessment: { suspicious, reason: suspicious ? "Scene changed mid-task" : "", confidence: 0.82, checked: true },
     question: questionId
       ? { id: questionId, text: "Why did the room change?", batch_index: index, asked_at: "" }
       : null,

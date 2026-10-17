@@ -189,8 +189,12 @@ function BatchDetails({ session, batch: b }: { session: Session; batch: Batch })
       <summary className={css.batchSummary}>
         <time className={css.stamp}>{formatTimestamp(b.started_at_s)}</time>
         <span className={css.batchName}>Batch {b.index + 1}</span>
-        <span className={b.assessment.suspicious ? css.flagged : css.clean}>
-          {b.assessment.suspicious ? `Flagged · ${formatPercent(b.assessment.confidence)}` : "Clean"}
+        <span className={b.assessment.suspicious || !b.assessment.checked ? css.flagged : css.clean}>
+          {!b.assessment.checked
+            ? "Not checked"
+            : b.assessment.suspicious
+              ? `Flagged · ${formatPercent(b.assessment.confidence)}`
+              : "Clean"}
         </span>
         <span className={css.batchLine}>{b.annotation.summary}</span>
       </summary>
