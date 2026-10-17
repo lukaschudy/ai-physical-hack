@@ -1,3 +1,4 @@
+import { extensionForMime } from "./lib/audio";
 import type { AnswerResult, BatchResult, Session } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -27,10 +28,11 @@ export const api = {
     return request<BatchResult>(`/sessions/${id}/batches`, { method: "POST", body });
   },
 
+  /** Recorded answer; filename extension follows the blob's mime (webm or m4a). */
   postAnswer: (id: string, questionId: string, audio: Blob) => {
     const body = new FormData();
     body.append("question_id", questionId);
-    body.append("audio", audio, "answer.webm");
+    body.append("audio", audio, `answer.${extensionForMime(audio.type)}`);
     return request<AnswerResult>(`/sessions/${id}/answers`, { method: "POST", body });
   },
 
