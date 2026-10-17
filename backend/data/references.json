@@ -3,14 +3,399 @@
     "id": "fold-shirt-legit-1",
     "task": "fold a t-shirt",
     "label": "legit",
-    "description": "Contributor lays a t-shirt flat on a table, folds both sleeves inward, then folds the shirt in half from the bottom. Hands visible throughout, same room, continuous motion.",
-    "signals": ["continuous hand motion", "single consistent scene", "object state changes frame to frame"]
+    "description": "Frames 0-3: first-person view, both hands lay a grey cotton t-shirt face-down on a wooden table and smooth out wrinkles. Frames 4-7: left sleeve, then right sleeve folded toward the centre; the shirt becomes a narrow rectangle. Frames 8-9: bottom edge lifted and folded up to the collar. Hands: contributor's own, entering from the bottom of the frame, slight motion blur. Scene: same bedroom table, consistent lighting and shadows. Anomalies: none.",
+    "signals": ["own hands enter from the bottom of the frame", "shirt shape changes every 2-3 frames", "same table, lighting and shadows in every frame", "natural motion blur from small head movements"]
+  },
+  {
+    "id": "fold-shirt-legit-2",
+    "task": "fold a t-shirt",
+    "label": "legit",
+    "description": "Frames 0-2: hands pull a blue t-shirt from a laundry basket on a bed. Frames 3-5: shirt shaken out and laid flat; the first sleeve fold is uneven. Frames 6-8: hands unfold the sleeve and redo it more neatly. Frame 9: folded shirt placed on a stack of two folded shirts. Hands: own, a black watch on the left wrist in every frame. Scene: bedroom, basket and stack stay in place. Anomalies: frame 4 blurred by head movement.",
+    "signals": ["redoing a fold is normal hesitation, not fraud", "personal detail (watch) persists across frames", "stack of folded shirts grows between batches", "blur only from head movement"]
+  },
+  {
+    "id": "fold-shirt-legit-3",
+    "task": "fold a t-shirt",
+    "label": "legit",
+    "description": "Frames 0-9: experienced folder works through a pile of white t-shirts on a sofa, about one shirt every 8 seconds. Each shirt passes through visible states: flat, sleeves in, halved, placed on the pile. Hands: own, fast but continuous motion with heavy blur on fold moments. Scene: living-room sofa, the unfolded pile shrinks while the folded pile grows. Anomalies: none.",
+    "signals": ["fast pace but every intermediate fold state is visible", "unfolded pile shrinks as the folded pile grows", "continuous hand motion between states"]
   },
   {
     "id": "fold-shirt-fraud-1",
     "task": "fold a t-shirt",
     "label": "fraud",
-    "description": "Frames show a phone or monitor playing a video of someone folding a shirt. Screen bezel and glare visible; contributor's own hands never touch the shirt.",
-    "signals": ["screen replay", "bezel or moire visible", "no contributor hands"]
+    "description": "Frames 0-9: a laptop screen fills most of the frame, playing a video of hands folding a white t-shirt. Screen bezel visible at the frame edges, moire pattern and glare on the display, a playback progress bar appears in frame 6. The folding hands are filmed from a different angle than the camera; the contributor's own hands never appear. Scene: dark room lit only by the screen. Anomalies: screen replay, moire, video player overlay.",
+    "signals": ["screen replay", "bezel, moire or glare on a display", "playback UI (progress bar) visible", "contributor's own hands never touch the shirt"]
+  },
+  {
+    "id": "fold-shirt-fraud-2",
+    "task": "fold a t-shirt",
+    "label": "fraud",
+    "description": "Frames 0-9: camera held at chest height facing across a table; a second person opposite folds a striped t-shirt, their face and torso visible. Their hands come from the top of the frame toward the camera. Frame 3: one of the contributor's fingers at the frame edge, gripping the phone. The contributor never touches the shirt. Anomalies: another person performs the task, third-person viewpoint.",
+    "signals": ["another person", "face and torso of someone else in frame", "hands enter from the top, facing the camera", "contributor only holds the phone"]
+  },
+  {
+    "id": "fold-shirt-fraud-3",
+    "task": "fold a t-shirt",
+    "label": "fraud",
+    "description": "Frames 0-1: crumpled t-shirt on a bed, no hands visible. Frame 2: the same shirt perfectly folded and squared, still no hands. Frames 3-9: folded shirt unchanged, camera static. Anomalies: task completed between two consecutive frames (about 1 s) with no intermediate fold states; recording likely paused or a pre-folded shirt swapped in.",
+    "signals": ["too fast", "end state appears between consecutive frames", "no intermediate states", "hands absent during the change"]
+  },
+  {
+    "id": "wash-dishes-legit-1",
+    "task": "wash dishes",
+    "label": "legit",
+    "description": "Frames 0-3: hands rinse a white plate under a running tap; sponge in the right hand scrubs in circles, suds visible. Frames 4-6: plate placed in the drying rack; left hand takes a mug from the sink. Frames 7-9: mug scrubbed inside and rinsed. Hands: own, wet, water reflections. Scene: kitchen sink below a window, the drying rack fills up. Anomalies: none.",
+    "signals": ["running water and suds", "items move from sink to drying rack", "rack count increases across batches", "wet hands with reflections"]
+  },
+  {
+    "id": "wash-dishes-legit-2",
+    "task": "wash dishes",
+    "label": "legit",
+    "description": "Frames 0-9: yellow rubber gloves scrub a greasy frying pan with a brush, then rinse it. Frames 5-6 partly fogged by steam from hot water. Hands: own, gloved, gripping the pan handle. Scene: same sink and tiled backsplash; grease visibly removed by frame 9. Anomalies: steam fog in frames 5-6.",
+    "signals": ["gloves are fine; hands still drive the motion", "steam fog is a normal camera artefact", "pan goes from greasy to clean"]
+  },
+  {
+    "id": "wash-dishes-legit-3",
+    "task": "wash dishes",
+    "label": "legit",
+    "description": "Frames 0-3: hands wash a saucepan. Frames 4-5: view turns to a doorway as someone calls; hands rest on the sink edge. Frames 6-9: view returns to the sink and the contributor rinses the saucepan and racks it. Hands: own throughout. Scene: same kitchen, doorway visible in frames 4-5 only. Anomalies: brief look away.",
+    "signals": ["brief interruption with continuous camera movement", "same kitchen before and after the look away", "task resumes where it stopped"]
+  },
+  {
+    "id": "wash-dishes-fraud-1",
+    "task": "wash dishes",
+    "label": "fraud",
+    "description": "Batch 3 is near-identical to batch 1: the same blue bowl scrubbed with the same sponge stroke, same suds pattern, same water-stream shape. The drying rack holds 4 plates in every frame of both batches. Frame 9 jumps back to the pose of frame 0. Anomalies: repeated sequence, rack contents frozen, loop seam at frame 9.",
+    "signals": ["looped footage", "same motion repeats across batches", "progress counter (rack) never changes", "pose resets at a loop seam"]
+  },
+  {
+    "id": "wash-dishes-fraud-2",
+    "task": "wash dishes",
+    "label": "fraud",
+    "description": "Frames 0-9: hands hold a dry sponge and move it back and forth over the same clean plate in an empty sink. The tap never runs, no water or suds, the plate never reaches the rack. Hands: own, dry. Scene: kitchen sink. Anomalies: mimed scrubbing with no state change.",
+    "signals": ["idle motion", "no water, suds or wet surfaces", "same plate in the same place every frame", "motion without any change in object state"]
+  },
+  {
+    "id": "wash-dishes-fraud-3",
+    "task": "wash dishes",
+    "label": "fraud",
+    "description": "Frames 0-9: contributor in a kitchen wipes the countertop with a cloth and moves a cutting board and a kettle aside. The sink is out of frame and no dishes are handled. Hands: own. Scene: kitchen counter. Anomalies: activity does not match the declared task.",
+    "signals": ["wrong task", "declared objects (dishes, sink) never handled", "plausible nearby activity instead of the task"]
+  },
+  {
+    "id": "chop-vegetables-legit-1",
+    "task": "chop vegetables",
+    "label": "legit",
+    "description": "Frames 0-3: left hand in a claw grip holds a carrot on a wooden cutting board; right hand slices rounds with a chef's knife. Frames 4-6: the pile of rounds grows, ends pushed aside. Frames 7-9: knife scrapes the rounds into a bowl and the left hand picks up an onion. Hands: own, from the bottom of the frame. Scene: kitchen counter, consistent. Anomalies: none.",
+    "signals": ["knife contacts the vegetable and pieces separate", "pile of cut pieces grows frame to frame", "whole vegetables decrease as the bowl fills"]
+  },
+  {
+    "id": "chop-vegetables-legit-2",
+    "task": "chop vegetables",
+    "label": "legit",
+    "description": "Frames 0-1: hands halve an onion. Frames 2-3: view tilts to a phone propped on the counter showing a recipe, then back to the board. Frames 4-9: onion diced into small cubes; contributor wipes eyes with the back of the wrist in frame 7. Hands: own. Scene: same board and counter. Anomalies: phone screen visible in frames 2-3.",
+    "signals": ["a brief glance at a recipe screen is not a screen replay", "the main view stays on the board", "onion goes from whole to diced"]
+  },
+  {
+    "id": "chop-vegetables-legit-3",
+    "task": "chop vegetables",
+    "label": "legit",
+    "description": "Frames 0-9: slow, careful cutting of a cucumber into uneven slices; long pauses between cuts, knife repositioned several times. About 6 slices across the batch. Hands: own, hesitant. Scene: small kitchen table, cutting board on a towel. Anomalies: none.",
+    "signals": ["slow beginner pace is still real progress", "uneven slices show real cutting", "slice count increases"]
+  },
+  {
+    "id": "chop-vegetables-fraud-1",
+    "task": "chop vegetables",
+    "label": "fraud",
+    "description": "Frames 0-9: a printed photo of chopped red peppers on a cutting board held in front of the camera. The image is identical across frames apart from a slight tilt; a thumb covers one corner of the print. Paper edge and glossy reflection visible, no depth or parallax. Anomalies: static photo held to the camera.",
+    "signals": ["static photo", "identical image across frames apart from tilt", "paper edge, glossy reflection, no parallax", "fingers holding the edge of the print"]
+  },
+  {
+    "id": "chop-vegetables-fraud-2",
+    "task": "chop vegetables",
+    "label": "fraud",
+    "description": "Frames 0-2: whole cucumber on a white board in a bright kitchen. Frame 3: dark wooden board, a different knife, a sliced tomato. Frames 6-9: an outdoor picnic table at dusk with diced carrots. Countertop, lighting and sleeve colour change between frames with no transition. Anomalies: scene jumps, inconsistent objects, compilation of clips.",
+    "signals": ["scene cuts", "board, knife and vegetable change between frames", "lighting and time of day jump", "sleeve colour differs between frames"]
+  },
+  {
+    "id": "chop-vegetables-fraud-3",
+    "task": "chop vegetables",
+    "label": "fraud",
+    "description": "Frames 0-9: a TV in the background shows a cooking show where a chef dices onions; the camera points at the TV from a sofa. Scan lines and a channel logo visible in the corner. A remote control rests on the contributor's knee. Anomalies: screen replay of a broadcast.",
+    "signals": ["screen replay", "channel logo and scan lines", "camera fixed on a TV, not on own hands", "no cutting board in the contributor's space"]
+  },
+  {
+    "id": "make-bed-legit-1",
+    "task": "make a bed",
+    "label": "legit",
+    "description": "Frames 0-3: hands pull a fitted sheet corner over the mattress corner. Frames 4-6: flat sheet spread and smoothed across the bed. Frames 7-9: duvet pulled up to the headboard, a pillow plumped and placed. Hands: own, reaching across the bed. Scene: same bedroom, the view moves as the contributor walks around the bed. Anomalies: none.",
+    "signals": ["sheet, duvet and pillow states change in order", "viewpoint moves naturally around the bed", "own hands reach across the mattress"]
+  },
+  {
+    "id": "make-bed-legit-2",
+    "task": "make a bed",
+    "label": "legit",
+    "description": "Frames 0-2: hands straighten a duvet. Frames 3-4: a cat jumps onto the bed and is lifted off. Frames 5-9: the duvet is smoothed again and two pillows arranged. Hands: own, holding the cat in frame 4. Scene: same bedroom. Anomalies: pet interruption.",
+    "signals": ["interruptions by pets are normal", "work resumes on the same objects", "consistent room and bedding"]
+  },
+  {
+    "id": "make-bed-legit-3",
+    "task": "make a bed",
+    "label": "legit",
+    "description": "Frames 0-9: sheets are already on; the contributor only pulls the duvet straight, folds the top edge and arranges three pillows, finishing in about 20 seconds over two batches. Each step visible: duvet pulled, edge folded, pillows placed one by one. Hands: own. Scene: same bedroom. Anomalies: none.",
+    "signals": ["short task is fine when each step is visible", "pillows placed one at a time", "hands present during every change"]
+  },
+  {
+    "id": "make-bed-fraud-1",
+    "task": "make a bed",
+    "label": "fraud",
+    "description": "Frames 0-9: camera static in a doorway; another adult across the room spreads a duvet and arranges pillows, their face visible in frames 2 and 7. The contributor's hands never appear and the viewpoint never moves. Anomalies: another person performs the task, fixed third-person viewpoint.",
+    "signals": ["another person", "someone else's face visible", "static doorway viewpoint", "contributor's hands absent"]
+  },
+  {
+    "id": "make-bed-fraud-2",
+    "task": "make a bed",
+    "label": "fraud",
+    "description": "Frame 0: messy bed with a crumpled duvet and pillows on the floor. Frame 1: bed perfectly made, pillows arranged, decorative throw folded at the foot. No hands visible in either frame. Frames 2-9: static made bed. Anomalies: full task completed between consecutive frames (about 1 s); normally takes 1-3 minutes.",
+    "signals": ["too fast", "messy to finished between consecutive frames", "no hands during the change", "static camera after completion"]
+  },
+  {
+    "id": "make-bed-fraud-3",
+    "task": "make a bed",
+    "label": "fraud",
+    "description": "Batches 2 and 4 show the same sequence: hands lift the duvet corner, shake it, and lay it down in the same spot, with identical wrinkles and an identical sunlight patch on the wall. The bed never gets more finished. Anomalies: repeated footage across batches, lighting frozen.",
+    "signals": ["looped footage", "identical wrinkles and lighting across batches", "bed state never progresses", "sunlight patch does not move over time"]
+  },
+  {
+    "id": "tidy-desk-legit-1",
+    "task": "tidy a desk",
+    "label": "legit",
+    "description": "Frames 0-3: hands gather loose pens into a cup and stack scattered papers. Frames 4-6: laptop closed and pushed to the back; coffee mug moved to the side. Frames 7-9: surface wiped with a cloth. Hands: own. Scene: home office desk, the clear area grows each frame. Anomalies: none.",
+    "signals": ["clutter decreases frame to frame", "objects end in new, stable places", "own hands move each item"]
+  },
+  {
+    "id": "tidy-desk-legit-2",
+    "task": "tidy a desk",
+    "label": "legit",
+    "description": "Frames 0-4: hands sort sticky notes, reading one closely before binning it. Frames 5-9: cables coiled and tied; an open laptop showing a spreadsheet stays on the desk. Hands: own. Scene: same desk and monitor. Anomalies: laptop screen visible.",
+    "signals": ["an incidental screen on the desk is not a screen replay", "reading items before sorting is normal", "cables go from loose to tied"]
+  },
+  {
+    "id": "tidy-desk-legit-3",
+    "task": "tidy a desk",
+    "label": "legit",
+    "description": "Frames 0-9: contributor clears a drawer, putting old receipts in a bin and lining up stationery in a tray. Progress is small per frame but visible: the bin fills, the tray fills. Hands: own, view looking down into the drawer. Scene: same desk. Anomalies: none.",
+    "signals": ["small but cumulative state changes", "bin and tray contents grow", "consistent downward viewpoint"]
+  },
+  {
+    "id": "tidy-desk-fraud-1",
+    "task": "tidy a desk",
+    "label": "fraud",
+    "description": "Frames 0-9: hands move the same two pens left and right and back again. Papers, mugs and cables stay exactly where they were; after three batches the desk is as cluttered as at the start. Anomalies: repetitive motion with no state change.",
+    "signals": ["idle motion", "same object moved back and forth", "clutter level unchanged across batches"]
+  },
+  {
+    "id": "tidy-desk-fraud-2",
+    "task": "tidy a desk",
+    "label": "fraud",
+    "description": "Frames 0-9: contributor sits at the desk scrolling a social media feed on a phone, then types on the laptop keyboard. Nothing on the desk is moved. Hands: own, on the phone and keyboard. Anomalies: activity unrelated to the declared task.",
+    "signals": ["wrong task", "hands busy with phone or keyboard", "desk objects never moved"]
+  },
+  {
+    "id": "tidy-desk-fraud-3",
+    "task": "tidy a desk",
+    "label": "fraud",
+    "description": "Frames 0-9: a perfectly tidy desk, pixel-identical in every frame: no motion blur, no noise change, no hands, clock on the monitor stuck at 14:02. Anomalies: frozen frame, likely a still image fed to the camera.",
+    "signals": ["static photo", "pixel-identical frames", "clock or display frozen", "no hands, no sensor noise or blur"]
+  },
+  {
+    "id": "water-plants-legit-1",
+    "task": "water plants",
+    "label": "legit",
+    "description": "Frames 0-3: hands tilt a green watering can over a potted monstera; water stream visible, soil darkens. Frames 4-6: contributor walks to a windowsill. Frames 7-9: second plant watered; excess water collects in the saucer. Hands: own, can held in the right hand. Scene: living room to windowsill with continuous walking frames. Anomalies: none.",
+    "signals": ["visible water stream", "soil changes from pale to dark", "walking frames connect locations", "moves on to the next plant"]
+  },
+  {
+    "id": "water-plants-legit-2",
+    "task": "water plants",
+    "label": "legit",
+    "description": "Frames 0-4: a finger pokes the soil of a succulent to check moisture, then a spray bottle mists a fern; droplets visible on the leaves. Frames 5-9: a small jug waters three herb pots on a counter one by one. Hands: own. Scene: kitchen counter. Anomalies: none.",
+    "signals": ["checking soil first is normal", "droplets appear on leaves", "pots watered one by one"]
+  },
+  {
+    "id": "water-plants-legit-3",
+    "task": "water plants",
+    "label": "legit",
+    "description": "Frames 0-9: on a balcony, hands water planters with a hose. Lighting shifts between frames 3 and 6 as a cloud passes; the camera briefly faces the sun (overexposed frame 5). Hands: own, gripping the hose nozzle. Scene: same balcony railing and planters. Anomalies: lighting change from weather.",
+    "signals": ["gradual lighting changes outdoors are not scene cuts", "same railing and planters throughout", "wet soil spreads planter by planter"]
+  },
+  {
+    "id": "water-plants-fraud-1",
+    "task": "water plants",
+    "label": "fraud",
+    "description": "Frames 0-9: a phone held up to the camera plays a gardening video of someone watering roses. Status bar with battery icon visible at the top; a notification banner slides in at frame 4. The rose garden does not match the contributor's room seen around the phone. Anomalies: screen replay.",
+    "signals": ["screen replay", "phone status bar or notification visible", "displayed scene differs from the surroundings", "contributor's hands only hold the phone"]
+  },
+  {
+    "id": "water-plants-fraud-2",
+    "task": "water plants",
+    "label": "fraud",
+    "description": "Frames 0-9: hands tilt a watering can over a plant, but no water stream appears, the soil stays pale and dry, and the saucer stays empty. The can's tilt repeats every few frames. Anomalies: mimed pouring, no state change.",
+    "signals": ["idle motion", "no water stream", "soil and saucer unchanged", "same tilt repeated"]
+  },
+  {
+    "id": "water-plants-fraud-3",
+    "task": "water plants",
+    "label": "fraud",
+    "description": "Frames 0-3: fern in a living room under lamp light. Frames 4-6: cactus on a sunny balcony. Frames 7-9: a garden hose on a lawn in a different house. No walking frames in between; time of day jumps from evening to noon. Anomalies: scene jumps, stitched clips.",
+    "signals": ["scene cuts", "locations change with no transition frames", "time of day jumps", "different houses within one batch"]
+  },
+  {
+    "id": "make-sandwich-legit-1",
+    "task": "make a sandwich",
+    "label": "legit",
+    "description": "Frames 0-3: two slices of bread laid on a plate; a knife spreads butter on one. Frames 4-6: cheese and ham layered, lettuce added. Frames 7-9: sandwich closed and cut diagonally. Hands: own. Scene: kitchen counter with an open butter dish. Anomalies: none.",
+    "signals": ["layers added one at a time", "spreading motion with visible butter", "sandwich cut at the end"]
+  },
+  {
+    "id": "make-sandwich-legit-2",
+    "task": "make a sandwich",
+    "label": "legit",
+    "description": "Frames 0-2: contributor opens the fridge and takes out a jar of jam and a tomato. Frames 3-4: walking frames from fridge to counter. Frames 5-9: peanut butter and jam spread; knife dropped and picked up in frame 7. Hands: own. Scene: kitchen, fridge and counter linked by continuous movement. Anomalies: none.",
+    "signals": ["moving between fridge and counter is continuous, not a cut", "fumbles like dropping a knife are normal", "ingredients appear from the fridge before use"]
+  },
+  {
+    "id": "make-sandwich-legit-3",
+    "task": "make a sandwich",
+    "label": "legit",
+    "description": "Frames 0-9: contributor toasts bread in a pan, flips it, then fills it with egg and avocado; a pause in frames 4-5 while waiting for the toast. Hands: own, holding a spatula. Scene: same stove and counter. Anomalies: idle wait in frames 4-5.",
+    "signals": ["waiting during cooking is a legitimate pause", "bread colour changes when toasted", "filling added after the pause"]
+  },
+  {
+    "id": "make-sandwich-fraud-1",
+    "task": "make a sandwich",
+    "label": "fraud",
+    "description": "Frame 0-2: bare bread slices on a board. Frame 3: a complete sandwich with lettuce, tomato and turkey, cut in half and plated. No hands in frames 2-3; the knife never moves. Frames 4-9: static. Anomalies: assembly completed between consecutive frames.",
+    "signals": ["too fast", "finished sandwich appears between frames", "no hands or tools move during assembly"]
+  },
+  {
+    "id": "make-sandwich-fraud-2",
+    "task": "make a sandwich",
+    "label": "fraud",
+    "description": "Frames 0-9: a cookbook page with a glossy photo of a club sandwich held in front of the camera. Printed text and page curvature visible; the image is identical in every frame. Anomalies: static photo held to the camera.",
+    "signals": ["static photo", "printed text and page curvature", "identical image across frames", "no depth or parallax"]
+  },
+  {
+    "id": "make-sandwich-fraud-3",
+    "task": "make a sandwich",
+    "label": "fraud",
+    "description": "Frames 0-9: hands unwrap a store-bought sandwich from plastic packaging with a supermarket label and start eating it. No bread, spreads or fillings are assembled. Anomalies: activity is not the declared task.",
+    "signals": ["wrong task", "pre-made item in retail packaging", "no assembly steps"]
+  },
+  {
+    "id": "assemble-furniture-legit-1",
+    "task": "assemble furniture",
+    "label": "legit",
+    "description": "Frames 0-3: hands turn an Allen key to fasten a side panel of a small bookshelf to the base. Frames 4-6: second screw driven; the paper instruction sheet lies on the carpet. Frames 7-9: panel squared up and checked. Hands: own. Scene: living-room floor, the bag of loose parts shrinks. Anomalies: none.",
+    "signals": ["screws visibly go in", "loose parts decrease", "partially built structure grows", "paper instructions on the floor"]
+  },
+  {
+    "id": "assemble-furniture-legit-2",
+    "task": "assemble furniture",
+    "label": "legit",
+    "description": "Frames 0-5: contributor holds a printed instruction booklet and reads step 4, turning a page in frame 3; no assembly progress. Frames 6-9: wooden dowels pressed into pre-drilled holes and a shelf slid into place. Hands: own. Scene: same room and parts. Anomalies: reading pause in frames 0-5.",
+    "signals": ["reading paper instructions is a legitimate pause", "progress resumes after the pause", "same parts before and after"]
+  },
+  {
+    "id": "assemble-furniture-legit-3",
+    "task": "assemble furniture",
+    "label": "legit",
+    "description": "Frames 0-9: a cordless drill drives screws to attach a seat to a chair frame; the contributor kneels and the view tilts down at the work. Sawdust and the drill bit visible in close frames. Hands: own, one stabilising the frame. Scene: garage floor, consistent. Anomalies: none.",
+    "signals": ["tool contact with the workpiece", "seat goes from loose to attached", "stabilising hand on the frame"]
+  },
+  {
+    "id": "assemble-furniture-fraud-1",
+    "task": "assemble furniture",
+    "label": "fraud",
+    "description": "Frame 0-2: unopened flat-pack boxes on a carpet. Frame 3-5: a half-built wardrobe on tiled floor in a different room. Frame 6-9: finished wardrobe in a bedroom with different wallpaper. No transitions; floor material and lighting change between clips. Anomalies: scene jumps, compilation of stages.",
+    "signals": ["scene cuts", "floor and walls change between frames", "build stages skip ahead", "no transition frames"]
+  },
+  {
+    "id": "assemble-furniture-fraud-2",
+    "task": "assemble furniture",
+    "label": "fraud",
+    "description": "Frames 0-9: another person kneels and screws legs onto a table top; their face is visible in frame 5, and hands enter from the top of the frame facing the camera. The contributor's hands appear only holding the phone. Anomalies: another person performs the task.",
+    "signals": ["another person", "someone else's face visible", "hands enter from the top of the frame", "contributor never touches the parts"]
+  },
+  {
+    "id": "assemble-furniture-fraud-3",
+    "task": "assemble furniture",
+    "label": "fraud",
+    "description": "Frames 0-4 and 5-9 are the same clip twice: hands turn the same screw half a turn with identical hand positions; the screw stays half-inserted across batches and the parts pile does not shrink. Anomalies: looped footage, no progress.",
+    "signals": ["looped footage", "identical frames repeat within a batch", "screw never advances", "parts pile unchanged"]
+  },
+  {
+    "id": "generic-legit-1",
+    "task": "any task",
+    "label": "legit",
+    "description": "Egocentric view: the contributor's own hands enter from the bottom of the frame and handle the task objects. Scene, lighting and personal details (sleeves, jewellery, watch) stay consistent. Objects change state gradually across frames, and the camera moves with small head or body motion. Brief pauses, glances away, fumbles and short interruptions are normal.",
+    "signals": ["own hands from the bottom of the frame", "gradual object state change", "consistent scene and personal details", "natural camera motion and blur"]
+  },
+  {
+    "id": "generic-fraud-screen-replay",
+    "task": "any task",
+    "label": "fraud",
+    "description": "The camera films a display (monitor, TV, tablet or phone) playing someone else's video of the task. Bezel, moire, glare, refresh banding or a pixel grid visible; playback UI such as a progress bar, subtitles or notifications may appear. The displayed footage does not move with the camera, and the contributor's own hands do not handle the objects.",
+    "signals": ["screen replay", "bezel, moire, glare or pixel grid", "playback UI or phone status bar", "displayed scene independent of camera motion"]
+  },
+  {
+    "id": "generic-fraud-static-photo",
+    "task": "any task",
+    "label": "fraud",
+    "description": "A printed photo, book page or still image is held to the camera or fed in as a frozen frame. Frames are identical apart from slight tilt; paper edges, page curvature or holding fingers visible; no parallax, no motion blur, no change in sensor noise.",
+    "signals": ["static photo", "identical frames apart from tilt", "paper edge or holding fingers", "no parallax or sensor noise change"]
+  },
+  {
+    "id": "generic-fraud-looped",
+    "task": "any task",
+    "label": "fraud",
+    "description": "The same short sequence repeats within or across batches: identical hand poses, identical object positions and lighting, and a visible reset at the loop seam. Progress markers (piles, counts, cleanliness) never advance.",
+    "signals": ["looped footage", "repeated identical sequences", "pose or object reset at a seam", "progress never advances"]
+  },
+  {
+    "id": "generic-fraud-idle",
+    "task": "any task",
+    "label": "fraud",
+    "description": "Hands move near the task objects but nothing changes: mimed actions, tools never contacting materials, the same item moved back and forth. After several batches the scene is in the same state as at the start.",
+    "signals": ["idle motion", "motion without object state change", "tools never contact materials", "same end state as start state"]
+  },
+  {
+    "id": "generic-fraud-other-person",
+    "task": "any task",
+    "label": "fraud",
+    "description": "Someone other than the contributor performs the task: third-person viewpoint, another person's face or torso in frame, hands entering from the top or sides facing the camera, and the contributor's hands at most holding the phone.",
+    "signals": ["another person", "third-person viewpoint", "hands enter facing the camera", "contributor only holds the camera"]
+  },
+  {
+    "id": "generic-fraud-scene-cuts",
+    "task": "any task",
+    "label": "fraud",
+    "description": "Hard cuts between clips: location, lighting, time of day, objects or clothing change between consecutive frames with no transition frames, or task stages skip ahead. Typical of stitched or downloaded footage.",
+    "signals": ["scene cuts", "scene changes without transition frames", "lighting or clothing changes between frames", "task stages skip ahead"]
+  },
+  {
+    "id": "generic-fraud-too-fast",
+    "task": "any task",
+    "label": "fraud",
+    "description": "The task jumps from start state to finished state within one or two frames, far faster than physically possible, usually with no hands present during the change. Indicates paused recording or a swapped, pre-finished object.",
+    "signals": ["too fast", "start to finished between consecutive frames", "no intermediate states", "no hands during the change"]
+  },
+  {
+    "id": "generic-fraud-wrong-task",
+    "task": "any task",
+    "label": "fraud",
+    "description": "The contributor does something other than the declared task: a nearby chore, using a phone or laptop, or consuming a pre-made item. The objects the declared task needs are never handled.",
+    "signals": ["wrong task", "declared task objects never handled", "unrelated activity fills the batch"]
   }
 ]
