@@ -18,7 +18,7 @@ jobs:
       USE_FAKES: "1" # offline fakes; live tests skip themselves
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
           working-directory: backend
           enable-cache: true
