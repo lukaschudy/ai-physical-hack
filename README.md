@@ -91,17 +91,76 @@ The verdict includes the evidence: flagged batches with timestamps, Jev’s reas
 
 ## Development
 
-```bash
-# backend (http://localhost:8000); copy backend/.env.example to backend/.env for real services
-cd backend && uv sync && uv run uvicorn app.main:app --reload
-uv run pytest && uv run ruff check . && uv run ruff format --check .
+Needs [uv](https://docs.astral.sh/uv/) and [pnpm](https://pnpm.io/) (Node 22.12+).
 
-# frontend (http://localhost:5173, proxies /api to the backend)
-cd frontend && pnpm install && pnpm dev
-pnpm typecheck && pnpm test
+```bash
+scripts/dev.sh   # installs missing deps, runs backend :8000 + frontend :5173; Ctrl-C stops both
 ```
 
+Open http://localhost:5173 (contributor flow). Vite proxies `/api` to the backend.
+
+Or run each side yourself:
+
+```bash
+cd backend && uv sync && uv run uvicorn app.main:app --reload
+cd frontend && pnpm install && pnpm dev
+```
+
+### Checks (same as CI)
+
+```bash
+cd backend && uv run pytest && uv run ruff check . && uv run ruff format --check .
+cd frontend && pnpm typecheck && pnpm test && pnpm build
+```
+
+`.github/workflows/ci.yml` runs these on every push and PR, offline (`USE_FAKES=1`).
+
+### Environment
+
+Copy `backend/.env.example` to `backend/.env`. Real environment variables override it.
+
+| Variable | Purpose |
+| --- | --- |
+| `GEMINI_API_KEY` | Flash annotations, Jev comparison + verdict |
+| `ANTHROPIC_API_KEY` | Astra follow-up questions |
+| `ELEVENLABS_API_KEY` | Question voice (TTS) + answer transcription (STT) |
+| `USE_FAKES` | `1` (current default) = offline fakes everywhere; `0` = real clients where a key is set |
+| `DATA_DIR` | Sessions DB, images, audio (default `./var`, relative to `backend/`) |
+| `FLASH_MODEL`, `JEV_MODEL`, `ASTRA_MODEL` | Model ids (defaults in `backend/app/config.py`) |
+| `ELEVENLABS_VOICE_ID`, `ELEVENLABS_TTS_MODEL`, `ELEVENLABS_STT_MODEL` | ElevenLabs voice + models |
+
+### Fakes and live tests
+
 Without API keys (or with `USE_FAKES=1`) every external service uses an offline fake, so the whole flow runs locally.
+
+Each service is chosen independently: e.g. with only `GEMINI_API_KEY` set, Astra and ElevenLabs stay fake.
+
+`backend/tests/test_live.py` (marker `live`) calls each real client once. Each test skips unless `USE_FAKES=0` and its key is set.
+
+```bash
+cd backend && USE_FAKES=0 uv run pytest -m live   # only live tests; -m "not live" to exclude them
+```
+
+### Demo with a recorded video
+
+Make Chrome replay a video file as the webcam (and a WAV as the microphone), so the demo is repeatable:
+
+```bash
+ffmpeg -i demo.mp4 -vf fps=30 -pix_fmt yuv420p demo.y4m   # .y4m is uncompressed: keep clips short
+ffmpeg -i answer.m4a -ar 48000 -ac 1 answer.wav
+open -na "Google Chrome" --args --user-data-dir=/tmp/chrome-demo \
+  --use-fake-ui-for-media-stream --use-fake-device-for-media-stream \
+  --use-file-for-fake-video-capture="$PWD/demo.y4m" \
+  --use-file-for-fake-audio-capture="$PWD/answer.wav" http://localhost:5173
+```
+
+On Linux, run `google-chrome` with the same flags. The video loops.
+
+### Reviewer page
+
+http://localhost:5173/#/sessions lists all sessions; `#/sessions/<id>` shows one session's verdict, evidence, and Q&A. Sessions persist in `DATA_DIR`.
+
+### Modules
 
 | Module | Role |
 | --- | --- |
