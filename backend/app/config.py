@@ -28,8 +28,7 @@ def load_settings() -> Settings:
         gemini_api_key=env("GEMINI_API_KEY", ""),
         anthropic_api_key=env("ANTHROPIC_API_KEY", ""),
         elevenlabs_api_key=env("ELEVENLABS_API_KEY", ""),
-        # TODO(integration): flip default to "0" once every real client is implemented.
-        use_fakes=env("USE_FAKES", "1") == "1",
+        use_fakes=env("USE_FAKES", "0") == "1",  # services without a key fall back to fakes anyway
         data_dir=Path(env("DATA_DIR", "./var")),
         flash_model=env("FLASH_MODEL", "gemini-3.8-flash"),
         jev_model=env("JEV_MODEL", "gemini-3.8-flash"),

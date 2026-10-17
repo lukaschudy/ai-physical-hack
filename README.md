@@ -124,7 +124,7 @@ Copy `backend/.env.example` to `backend/.env`. Real environment variables overri
 | `GEMINI_API_KEY` | Flash annotations, Jev comparison + verdict |
 | `ANTHROPIC_API_KEY` | Astra follow-up questions |
 | `ELEVENLABS_API_KEY` | Question voice (TTS) + answer transcription (STT) |
-| `USE_FAKES` | `1` (current default) = offline fakes everywhere; `0` = real clients where a key is set |
+| `USE_FAKES` | `0` (default) = real clients where a key is set, fakes elsewhere; `1` = offline fakes everywhere |
 | `DATA_DIR` | Sessions DB, images, audio (default `./var`, relative to `backend/`) |
 | `FLASH_MODEL`, `JEV_MODEL`, `ASTRA_MODEL` | Model ids (defaults in `backend/app/config.py`) |
 | `ELEVENLABS_VOICE_ID`, `ELEVENLABS_TTS_MODEL`, `ELEVENLABS_STT_MODEL` | ElevenLabs voice + models |
@@ -138,7 +138,7 @@ Each service is chosen independently: e.g. with only `GEMINI_API_KEY` set, Astra
 `backend/tests/test_live.py` (marker `live`) calls each real client once. Each test skips unless `USE_FAKES=0` and its key is set.
 
 ```bash
-cd backend && USE_FAKES=0 uv run pytest -m live   # only live tests; -m "not live" to exclude them
+cd backend && uv run pytest -m live   # live tests only; plain `uv run pytest` excludes them
 ```
 
 ### Demo with a recorded video
