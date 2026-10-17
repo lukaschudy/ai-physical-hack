@@ -8,7 +8,7 @@ const batch = (suspicious: boolean): Batch => ({
   started_at_s: 0,
   image_paths: [],
   annotation: { frames: [], summary: "" },
-  assessment: { suspicious, reason: "", confidence: 0.5 },
+  assessment: { suspicious, reason: "", confidence: 0.5, checked: true },
   question: null,
 });
 
