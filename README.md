@@ -13,13 +13,17 @@ flowchart TD
     C --> D["Gemini Flash<br/>Images → structured text"]
     D --> E["Jev<br/>Compares text with references"]
     E --> F{"Suspicious or<br/>needs clarification?"}
-    F -->|No| N["Continue<br/>Capture the next batch"]
+    F -->|No| T{"Task finished?"}
+    T -->|No| N["Continue<br/>Capture the next batch"]
+    T -->|Yes| V["Session verdict<br/>Section 3 below"]
     F -->|Yes| Y["Escalate to Astra<br/>Follow-up flow below"]
 
     classDef normal fill:#dcfce7,stroke:#166534,color:#14532d;
     classDef escalate fill:#fef3c7,stroke:#92400e,color:#78350f;
+    classDef verdict fill:#dbeafe,stroke:#1e40af,color:#1e3a8a;
     class N normal;
     class Y escalate;
+    class V verdict;
 ```
 
 **Continue** returns to Shift’s next batch, without repeating reference retrieval.
@@ -32,8 +36,9 @@ Astra receives the **original images**, **Flash’s structured text**, **referen
 flowchart TD
     A["Astra<br/>Reviews images + text + context"] --> B["Astra<br/>Generates a follow-up question"]
     B --> C["ElevenLabs<br/>Voices the question in Shift"]
-    C --> D["Contributor<br/>Answers the question"]
-    D --> E["Session context<br/>Stores the answer"]
+    C --> D["Contributor<br/>Answers by voice"]
+    D --> S["ElevenLabs STT<br/>Transcribes the answer"]
+    S --> E["Session context<br/>Stores the transcript"]
     E --> F["Resume recording<br/>Capture the next batch"]
 
     classDef resume fill:#dcfce7,stroke:#166534,color:#14532d;
@@ -41,6 +46,29 @@ flowchart TD
 ```
 
 The next batch goes through **Flash → Jev**. Jev uses the updated session context when comparing the new annotations.
+
+### 3. Session verdict
+
+When the contributor ends the task, Jev scores the whole session.
+
+```mermaid
+flowchart TD
+    A["Contributor<br/>Ends the task"] --> B["Jev<br/>Reviews all batches + Q&A"]
+    B --> C["Fraud score<br/>0–100"]
+    C --> D{"Decision"}
+    D --> E["Accept"]
+    D --> F["Review<br/>Send to a human"]
+    D --> G["Reject"]
+
+    classDef accept fill:#dcfce7,stroke:#166534,color:#14532d;
+    classDef review fill:#fef3c7,stroke:#92400e,color:#78350f;
+    classDef reject fill:#fee2e2,stroke:#991b1b,color:#7f1d1d;
+    class E accept;
+    class F review;
+    class G reject;
+```
+
+The verdict includes the evidence: flagged batches with timestamps, Jev’s reasons, and each follow-up question with its transcribed answer.
 
 ## Full flow
 
@@ -56,6 +84,7 @@ The next batch goes through **Flash → Jev**. Jev uses the updated session cont
    - Relevant reference annotations and Jev’s reason for escalating.
    - The declared task and conversation history.
 8. **Astra examines the images and text together and generates a targeted follow-up question.** ElevenLabs voices the question in Shift for the contributor.
-9. **The contributor’s answer enters the session context.** The next image batch goes through Gemini Flash, and Jev assesses the new annotations with that additional context.
+9. **The contributor answers by voice; ElevenLabs speech-to-text transcribes it.** The transcript enters the session context. The next image batch goes through Gemini Flash, and Jev assesses the new annotations with that additional context.
+10. **When the contributor ends the task, Jev issues a session verdict:** a fraud score (0–100), a decision (**Accept**, **Review** by a human, or **Reject**), and the evidence (flagged batches with timestamps, Jev’s reasons, follow-up questions with transcribed answers).
 
-**Declare task → Retrieve references → Image batch → Flash annotations → Jev comparison → Astra follow-up when needed → ElevenLabs voice → Answer and next batch.**
+**Declare task → Retrieve references → Image batch → Flash annotations → Jev comparison → Astra follow-up when needed → ElevenLabs voice → Spoken answer → ElevenLabs STT → Next batch → Session verdict.**
