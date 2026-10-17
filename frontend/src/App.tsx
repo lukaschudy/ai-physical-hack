@@ -5,7 +5,8 @@ import SessionsList from "./components/SessionsList";
 import TaskForm from "./components/TaskForm";
 import VerdictView from "./components/VerdictView";
 import { api } from "./api";
-import type { BatchResult, Question, Session } from "./types";
+import { questionAudioUrl, unansweredQuestions, withBatch } from "./lib/session";
+import type { BatchResult, Session } from "./types";
 
 /** Hash routes: "" = contributor flow, "#/sessions" = review list, "#/sessions/<id>" = one session. */
 function useHash() {
@@ -51,20 +52,49 @@ export default function App() {
   );
 }
 
+const ACTIVE_KEY = "shift.activeSession";
+
+/** The active session id lives in sessionStorage so switching to Review and back resumes it. */
 function ContributorFlow() {
   const [session, setSession] = useState<Session | null>(null);
-  const [pending, setPending] = useState<{ question: Question; audioUrl: string } | null>(null);
+  const [restoring, setRestoring] = useState(() => sessionStorage.getItem(ACTIVE_KEY) !== null);
   const [error, setError] = useState<string | null>(null);
 
-  if (!session) return <TaskForm onStarted={setSession} />;
-  if (session.status === "finished") return <VerdictView session={session} />;
+  useEffect(() => {
+    const id = sessionStorage.getItem(ACTIVE_KEY);
+    if (!id) return;
+    api
+      .getSession(id)
+      .then(setSession, () => sessionStorage.removeItem(ACTIVE_KEY))
+      .finally(() => setRestoring(false));
+  }, []);
 
-  const onBatch = (r: BatchResult) => {
-    setSession((s) => (s ? { ...s, batches: [...s.batches, r.batch] } : s));
-    if (r.batch.question && r.question_audio_url)
-      setPending({ question: r.batch.question, audioUrl: r.question_audio_url });
+  const start = (s: Session) => {
+    sessionStorage.setItem(ACTIVE_KEY, s.id);
+    setSession(s);
+  };
+  const reset = () => {
+    sessionStorage.removeItem(ACTIVE_KEY);
+    setSession(null);
+    setError(null);
   };
 
+  if (restoring) return <p className="muted">Loading…</p>;
+  if (!session) return <TaskForm onStarted={start} />;
+  if (session.status === "finished")
+    return (
+      <div className="stack">
+        <VerdictView session={session} />
+        <button className="block" onClick={reset}>
+          Record another task
+        </button>
+      </div>
+    );
+
+  // Questions queue up if several batches get flagged; ask them one at a time.
+  const question = unansweredQuestions(session)[0];
+  const onBatch = (r: BatchResult) => setSession((s) => (s ? withBatch(s, r.batch) : s));
+  const onAnswered = () => api.getSession(session.id).then(setSession, (e) => setError(String(e)));
   const finish = () => api.finish(session.id).then(setSession, (e) => setError(String(e)));
 
   return (
@@ -73,17 +103,18 @@ function ContributorFlow() {
         <p className="eyebrow">Recording</p>
         <h1>{session.task}</h1>
       </div>
-      <Recorder sessionId={session.id} paused={pending !== null} onBatch={onBatch} onError={setError} />
-      {pending && (
+      <Recorder sessionId={session.id} paused={!!question} onBatch={onBatch} onError={setError} />
+      {question && (
         <QuestionPanel
+          key={question.id}
           sessionId={session.id}
-          question={pending.question}
-          audioUrl={pending.audioUrl}
-          onAnswered={() => setPending(null)}
+          question={question}
+          audioUrl={questionAudioUrl(session.id, question.id)}
+          onAnswered={onAnswered}
         />
       )}
       {error && <p role="alert">{error}</p>}
-      <button className="block" onClick={finish} disabled={pending !== null}>
+      <button className="block" onClick={finish} disabled={!!question}>
         Finish task
       </button>
     </div>
