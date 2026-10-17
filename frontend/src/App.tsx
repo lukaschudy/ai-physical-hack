@@ -4,6 +4,7 @@ import Recorder from "./components/Recorder";
 import SessionsList from "./components/SessionsList";
 import TaskForm from "./components/TaskForm";
 import VerdictView from "./components/VerdictView";
+import VideoReplay from "./components/VideoReplay";
 import { api } from "./api";
 import type { BatchResult, Question, Session } from "./types";
 
@@ -35,6 +36,7 @@ function ContributorFlow() {
   const [session, setSession] = useState<Session | null>(null);
   const [pending, setPending] = useState<{ question: Question; audioUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<"camera" | "video">("camera");
 
   if (!session) return <main><TaskForm onStarted={setSession} /></main>;
   if (session.status === "finished") return <main><VerdictView session={session} /></main>;
@@ -50,7 +52,20 @@ function ContributorFlow() {
   return (
     <main>
       <h1>{session.task}</h1>
-      <Recorder sessionId={session.id} paused={pending !== null} onBatch={onBatch} onError={setError} />
+      <fieldset>
+        <legend>Source</legend>
+        {(["camera", "video"] as const).map((s) => (
+          <label key={s}>
+            <input type="radio" checked={source === s} onChange={() => setSource(s)} />
+            {s === "camera" ? "Camera" : "Video file"}
+          </label>
+        ))}
+      </fieldset>
+      {source === "camera" ? (
+        <Recorder sessionId={session.id} paused={pending !== null} onBatch={onBatch} onError={setError} />
+      ) : (
+        <VideoReplay sessionId={session.id} paused={pending !== null} onBatch={onBatch} onError={setError} />
+      )}
       {pending && (
         <QuestionPanel
           sessionId={session.id}
