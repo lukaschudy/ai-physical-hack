@@ -105,12 +105,11 @@ function ContributorFlow() {
         <p className="eyebrow">Recording</p>
         <h1>{session.task}</h1>
       </div>
-      <div className="row" role="radiogroup" aria-label="Source">
+      <div className="row" aria-label="Source">
         {(["camera", "video"] as const).map((s) => (
-          <label key={s} className="row">
-            <input type="radio" checked={source === s} onChange={() => setSource(s)} />
+          <button key={s} className="chip" aria-pressed={source === s} onClick={() => setSource(s)}>
             {s === "camera" ? "Camera" : "Video file"}
-          </label>
+          </button>
         ))}
       </div>
       {source === "camera" ? (
