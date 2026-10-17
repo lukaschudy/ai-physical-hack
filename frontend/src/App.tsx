@@ -4,6 +4,7 @@ import Recorder from "./components/Recorder";
 import SessionsList from "./components/SessionsList";
 import TaskForm from "./components/TaskForm";
 import VerdictView from "./components/VerdictView";
+import VideoReplay from "./components/VideoReplay";
 import { api } from "./api";
 import { questionAudioUrl, unansweredQuestions, withBatch } from "./lib/session";
 import type { BatchResult, Session } from "./types";
@@ -59,6 +60,7 @@ function ContributorFlow() {
   const [session, setSession] = useState<Session | null>(null);
   const [restoring, setRestoring] = useState(() => sessionStorage.getItem(ACTIVE_KEY) !== null);
   const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<"camera" | "video">("camera");
 
   useEffect(() => {
     const id = sessionStorage.getItem(ACTIVE_KEY);
@@ -103,7 +105,19 @@ function ContributorFlow() {
         <p className="eyebrow">Recording</p>
         <h1>{session.task}</h1>
       </div>
-      <Recorder sessionId={session.id} paused={!!question} onBatch={onBatch} onError={setError} />
+      <div className="row" role="radiogroup" aria-label="Source">
+        {(["camera", "video"] as const).map((s) => (
+          <label key={s} className="row">
+            <input type="radio" checked={source === s} onChange={() => setSource(s)} />
+            {s === "camera" ? "Camera" : "Video file"}
+          </label>
+        ))}
+      </div>
+      {source === "camera" ? (
+        <Recorder sessionId={session.id} paused={!!question} onBatch={onBatch} onError={setError} />
+      ) : (
+        <VideoReplay sessionId={session.id} paused={!!question} onBatch={onBatch} onError={setError} />
+      )}
       {question && (
         <QuestionPanel
           key={question.id}
