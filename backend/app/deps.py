@@ -6,7 +6,7 @@ from .config import Settings
 from .jev import FakeComparer, GeminiComparer
 from .pipeline import Pipeline
 from .references import JsonReferenceStore
-from .store import BlobStore, MemorySessionStore
+from .store import BlobStore, SqliteSessionStore
 from .stt import ElevenLabsTranscriber, FakeTranscriber
 from .tts import ElevenLabsSpeaker, FakeSpeaker
 from .verdict import FakeJudge, GeminiJudge
@@ -32,6 +32,6 @@ def build_pipeline(s: Settings) -> Pipeline:
         if eleven
         else FakeTranscriber(),
         judge=GeminiJudge(s.gemini_api_key, s.jev_model) if gemini else FakeJudge(),
-        sessions=MemorySessionStore(),
+        sessions=SqliteSessionStore(s.data_dir / "app.db"),
         blobs=BlobStore(s.data_dir),
     )

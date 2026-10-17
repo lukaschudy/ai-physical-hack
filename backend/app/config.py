@@ -31,10 +31,10 @@ def load_settings() -> Settings:
         # TODO(integration): flip default to "0" once every real client is implemented.
         use_fakes=env("USE_FAKES", "1") == "1",
         data_dir=Path(env("DATA_DIR", "./var")),
-        flash_model=env("FLASH_MODEL", "gemini-flash-latest"),
+        flash_model=env("FLASH_MODEL", "gemini-3.8-flash"),
         jev_model=env("JEV_MODEL", "gemini-3.8-flash"),
         astra_model=env("ASTRA_MODEL", "claude-opus-5-5"),
-        elevenlabs_voice_id=env("ELEVENLABS_VOICE_ID", ""),
-        elevenlabs_tts_model=env("ELEVENLABS_TTS_MODEL", ""),
-        elevenlabs_stt_model=env("ELEVENLABS_STT_MODEL", ""),
+        elevenlabs_voice_id=env("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb"),  # George
+        elevenlabs_tts_model=env("ELEVENLABS_TTS_MODEL", "eleven_flash_v2_5"),
+        elevenlabs_stt_model=env("ELEVENLABS_STT_MODEL", "scribe_v2"),
     )
