@@ -1,0 +1,16 @@
+[
+  {
+    "id": "fold-shirt-legit-1",
+    "task": "fold a t-shirt",
+    "label": "legit",
+    "description": "Contributor lays a t-shirt flat on a table, folds both sleeves inward, then folds the shirt in half from the bottom. Hands visible throughout, same room, continuous motion.",
+    "signals": ["continuous hand motion", "single consistent scene", "object state changes frame to frame"]
+  },
+  {
+    "id": "fold-shirt-fraud-1",
+    "task": "fold a t-shirt",
+    "label": "fraud",
+    "description": "Frames show a phone or monitor playing a video of someone folding a shirt. Screen bezel and glare visible; contributor's own hands never touch the shirt.",
+    "signals": ["screen replay", "bezel or moire visible", "no contributor hands"]
+  }
+]

@@ -88,3 +88,29 @@ The verdict includes the evidence: flagged batches with timestamps, Jev’s reas
 10. **When the contributor ends the task, Jev issues a session verdict:** a fraud score (0–100), a decision (**Accept**, **Review** by a human, or **Reject**), and the evidence (flagged batches with timestamps, Jev’s reasons, follow-up questions with transcribed answers).
 
 **Declare task → Retrieve references → Image batch → Flash annotations → Jev comparison → Astra follow-up when needed → ElevenLabs voice → Spoken answer → ElevenLabs STT → Next batch → Session verdict.**
+
+## Development
+
+```bash
+# backend (http://localhost:8000); copy backend/.env.example to backend/.env for real services
+cd backend && uv sync && uv run uvicorn app.main:app --reload
+uv run pytest && uv run ruff check . && uv run ruff format --check .
+
+# frontend (http://localhost:5173, proxies /api to the backend)
+cd frontend && pnpm install && pnpm dev
+pnpm typecheck && pnpm test
+```
+
+Without API keys (or with `USE_FAKES=1`) every external service uses an offline fake, so the whole flow runs locally.
+
+| Module | Role |
+| --- | --- |
+| `backend/app/models.py` / `frontend/src/types.ts` | Shared contract |
+| `references.py` + `data/references.json` | Jev's reference retrieval |
+| `annotate.py` | Gemini Flash annotation |
+| `jev.py` | Jev per-batch comparison |
+| `verdict.py` | Jev session verdict |
+| `astra.py` | Astra follow-up question |
+| `tts.py` / `stt.py` | ElevenLabs voice + transcription |
+| `store.py` | Sessions + stored images/audio |
+| `pipeline.py` / `main.py` | Orchestration + HTTP API |
