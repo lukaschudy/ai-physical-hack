@@ -5,7 +5,14 @@ from typing import Any
 
 import pytest
 
-from app.jev import SYSTEM_INSTRUCTION, GeminiComparer, JevError, build_prompt, parse_assessment
+from app.jev import (
+    SYSTEM_INSTRUCTION,
+    GeminiComparer,
+    JevError,
+    JevOutput,
+    build_prompt,
+    parse_assessment,
+)
 from app.models import (
     Answer,
     Assessment,
@@ -133,7 +140,7 @@ def test_assess_calls_gemini_with_structured_output():
     assert call["contents"] == build_prompt(s, a)
     assert call["config"].system_instruction == SYSTEM_INSTRUCTION
     assert call["config"].response_mime_type == "application/json"
-    assert call["config"].response_schema is Assessment
+    assert call["config"].response_schema is JevOutput
 
 
 def test_assess_wraps_api_errors():
@@ -147,6 +154,13 @@ def test_assess_wraps_api_errors():
 def test_assess_rejects_invalid_output(text):
     with pytest.raises(JevError, match="invalid assessment"):
         comparer(FakeModels(text)).assess(session(), annotation())
+
+
+def test_parse_assessment_ignores_model_checked_flag():
+    a = parse_assessment(
+        '{"suspicious": false, "reason": "ok", "confidence": 0.1, "checked": false}'
+    )
+    assert a.checked
 
 
 def test_parse_assessment_clamps_confidence():

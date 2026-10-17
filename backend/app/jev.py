@@ -5,7 +5,7 @@ from typing import Any, Protocol
 
 from google import genai
 from google.genai import types
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .models import Assessment, BatchAnnotation, FrameAnnotation, Session
 
@@ -101,13 +101,21 @@ def build_prompt(session: Session, annotation: BatchAnnotation) -> str:
     )
 
 
+class JevOutput(BaseModel):
+    """What the model fills in. `checked` stays ours: only failures mark a batch unchecked."""
+
+    suspicious: bool
+    reason: str
+    confidence: float
+
+
 def parse_assessment(text: str | None) -> Assessment:
     """Validate the model's JSON; clamp confidence so a slightly-off number doesn't fail a batch."""
     try:
         data: Any = json.loads(text or "")
         if isinstance(data, dict) and isinstance(data.get("confidence"), int | float):
             data["confidence"] = min(1.0, max(0.0, float(data["confidence"])))
-        return Assessment.model_validate(data)
+        return Assessment(**JevOutput.model_validate(data).model_dump())
     except (json.JSONDecodeError, ValidationError) as e:
         raise JevError(f"Jev returned an invalid assessment: {text!r}") from e
 
@@ -125,7 +133,7 @@ class GeminiComparer:
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_INSTRUCTION,
                     response_mime_type="application/json",
-                    response_schema=Assessment,
+                    response_schema=JevOutput,
                     # Low thinking keeps latency well under the 10 s batch cadence.
                     thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW),
                 ),
