@@ -49,6 +49,7 @@ def failed_annotation(error: Exception) -> tuple[BatchAnnotation, Assessment]:
         suspicious=False,
         reason=f"{UNCHECKED} annotation failed ({type(error).__name__}).",
         confidence=0,
+        checked=False,
     )
 
 
@@ -57,12 +58,13 @@ def failed_assessment(error: Exception) -> Assessment:
         suspicious=True,
         reason=f"{UNCHECKED} Jev comparison failed ({type(error).__name__}); needs human review.",
         confidence=0.5,
+        checked=False,
     )
 
 
 def require_review(session: Session, verdict: Verdict) -> Verdict:
     """Batches that could not be checked must not pass silently: never auto-accept them."""
-    unchecked = [b for b in session.batches if b.assessment.reason.startswith(UNCHECKED)]
+    unchecked = [b for b in session.batches if not b.assessment.checked]
     if not unchecked or verdict.decision != "accept":
         return verdict
     note = f"{len(unchecked)} batch(es) could not be checked automatically."

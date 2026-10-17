@@ -30,6 +30,7 @@ export interface Assessment {
   suspicious: boolean;
   reason: string;
   confidence: number;
+  checked: boolean;
 }
 
 export interface Question {

@@ -8,7 +8,7 @@ import pytest
 from app.annotate import FakeAnnotator
 from app.astra import FakeQuestioner
 from app.jev import FakeComparer
-from app.models import Assessment
+from app.models import Assessment, Verdict
 from app.pipeline import UNCHECKED, Conflict, Pipeline, Upstream
 from app.references import JsonReferenceStore
 from app.store import BlobStore, MemorySessionStore
@@ -58,7 +58,7 @@ def test_annotation_failure_stores_unchecked_batch(pipe, caplog):
 
     assert batch.annotation.frames == []
     assert not batch.assessment.suspicious and batch.question is None
-    assert batch.assessment.reason.startswith(UNCHECKED)
+    assert not batch.assessment.checked and batch.assessment.reason.startswith(UNCHECKED)
     assert "annotation failed" in batch.assessment.reason
     assert len(batch.image_paths) == 10
     assert pipe.sessions.get(s.id).batches == [batch]
@@ -74,15 +74,16 @@ def test_jev_failure_flags_for_review(pipe):
     batch = pipe.process_batch(s.id, IMAGES)
 
     assert batch.assessment.suspicious
-    assert batch.assessment.reason.startswith(UNCHECKED)
+    assert not batch.assessment.checked and batch.assessment.reason.startswith(UNCHECKED)
     assert pipe.finish(s.id).verdict.decision == "review"
 
 
 def test_unchecked_batches_do_not_soften_reject(pipe):
-    pipe = replace(pipe, comparer=Boom())
+    rejecting = Verdict(fraud_score=90, decision="reject", summary="Screen replay.")
+    judge = type("RejectingJudge", (), {"verdict": lambda self, session: rejecting})()
+    pipe = replace(pipe, comparer=Boom(), judge=judge)
     s = pipe.start("fold a t-shirt")
-    for _ in range(4):
-        pipe.process_batch(s.id, IMAGES)
+    pipe.process_batch(s.id, IMAGES)
     assert pipe.finish(s.id).verdict.decision == "reject"
 
 

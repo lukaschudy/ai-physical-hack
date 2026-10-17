@@ -74,12 +74,13 @@ def batch_risk(batch: Batch, answers: dict[str, str]) -> float:
 
 
 def heuristic_score(session: Session) -> int:
-    """60% worst batch + 40% share of flagged batches."""
-    if not session.batches:
+    """60% worst batch + 40% share of flagged batches, over batches that were actually checked."""
+    batches = [b for b in session.batches if b.assessment.checked]
+    if not batches:
         return EMPTY_SESSION_SCORE
     answers = {a.question_id: a.transcript for a in session.answers}
-    risks = [batch_risk(b, answers) for b in session.batches]
-    flagged = sum(b.assessment.suspicious for b in session.batches) / len(session.batches)
+    risks = [batch_risk(b, answers) for b in batches]
+    flagged = sum(b.assessment.suspicious for b in batches) / len(batches)
     return round(100 * (0.6 * max(risks) + 0.4 * flagged))
 
 

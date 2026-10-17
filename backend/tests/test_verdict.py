@@ -121,6 +121,13 @@ def test_heuristic_repeated_strong_flags_reject():
     assert v.fraud_score == 100 and v.decision == "reject" and len(v.evidence) == 3
 
 
+def test_heuristic_ignores_unchecked_batches():
+    unchecked = batch(1, suspicious=True, confidence=0.5, asked=True)
+    unchecked.assessment.checked = False
+    assert heuristic_score(session(batch(0), unchecked)) == 0
+    assert heuristic_score(session(unchecked)) == EMPTY_SESSION_SCORE
+
+
 def test_prompt_contains_whole_session():
     s = session(batch(0), batch(1, suspicious=True, confidence=0.7, asked=True))
     prompt = session_prompt(s)

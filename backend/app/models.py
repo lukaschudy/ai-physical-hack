@@ -55,6 +55,7 @@ class Assessment(BaseModel):
     suspicious: bool
     reason: str
     confidence: float = Field(ge=0, le=1)  # confidence that something is wrong
+    checked: bool = True  # False when Flash or Jev failed and nobody actually looked
 
 
 class Question(BaseModel):
