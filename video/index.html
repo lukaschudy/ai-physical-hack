@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Physical Hack — Ask before you flag</title>
+<!--
+  Deterministic explainer animation. render(t) draws the frame at t seconds (0..75).
+  window.TIMELINE exposes duration, fps, sound cues, subtitles and speech placement,
+  so audio and subtitles are generated from the same constants as the visuals.
+  Open in a browser to preview (space = play/pause, click the bar to scrub).
+-->
+<style>
+@font-face { font-family: Disp; src: url(fonts/InterDisplay-Black.woff2); font-weight: 900; }
+@font-face { font-family: Inter; src: url(fonts/Inter-Medium.woff2); font-weight: 500; }
+@font-face { font-family: Inter; src: url(fonts/Inter-SemiBold.woff2); font-weight: 600; }
+@font-face { font-family: Inter; src: url(fonts/Inter-Bold.woff2); font-weight: 700; }
+:root {
+  --off: #F2F4F8; --blue: #2F5BFF; --yel: #FFC400; --coral: #FF5A4F; --navy: #14152B;
+  --green: #22C55E; --violet: #8B5CF6; --grey: #646A7E; --grey2: #A6ABBD; --line: #E1E5EE;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+body { font-family: Inter; font-weight: 500; -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; inset: 0; overflow: hidden; }
+.scene { position: absolute; inset: 0; overflow: hidden; display: none; will-change: transform; }
+.light { background: var(--off); color: var(--navy); }
+.dark { background: var(--navy); color: #fff; }
+.a { position: absolute; }
+.hl { font-family: Disp; font-weight: 900; letter-spacing: -0.045em; line-height: 1.0; }
+.pill { background: var(--yel); color: var(--navy); border-radius: 999px; padding: 0 0.2em 0.02em; display: inline-block; line-height: 1.04; }
+.sub { font-size: 34px; color: var(--grey); letter-spacing: -0.01em; line-height: 1.3; }
+.dark .sub { color: var(--grey2); }
+.stagetag { font: 700 24px Inter; letter-spacing: 0.16em; text-transform: uppercase; display: flex; align-items: center; gap: 14px; }
+.stagetag b { width: 46px; height: 46px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; letter-spacing: 0; font: 900 24px Disp; }
+.chip { position: absolute; display: flex; align-items: center; gap: 14px; background: #fff; color: var(--navy); border-radius: 999px; padding: 9px 26px 9px 9px; font: 700 29px Inter; white-space: nowrap; box-shadow: 0 5px 0 rgba(20,21,43,0.13); }
+.light .chip { box-shadow: 0 5px 0 rgba(20,21,43,0.10), 0 0 0 2px #E3E6EE; }
+.chip i { font-style: normal; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 900 25px Disp; }
+.chip.inline { position: relative; font-size: 24px; padding: 6px 18px 6px 6px; gap: 10px; box-shadow: 0 0 0 2px #E3E6EE; }
+.chip.inline i { width: 36px; height: 36px; font-size: 20px; }
+.c-shift i { background: var(--blue); }
+.c-jev i { background: var(--navy); }
+.c-flash i { background: var(--yel); color: var(--navy); }
+.c-astra i { background: var(--coral); }
+.c-eleven i { background: var(--violet); }
+.card { position: absolute; background: #fff; color: var(--navy); border-radius: 26px; padding: 28px 32px; }
+.light .card { box-shadow: 0 0 0 2px var(--line); }
+.tag { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 6px 16px; font: 700 19px Inter; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+.t-blue { background: #E6ECFF; color: var(--blue); }
+.t-coral { background: #FFE6E4; color: #D9362C; }
+.t-yel { background: transparent; color: var(--yel); box-shadow: inset 0 0 0 2px var(--yel); }
+.t-grey { background: #EEF0F5; color: var(--grey); }
+.t-sim { background: #EEF0F5; color: var(--grey); font-size: 16px; padding: 4px 12px; }
+.mono { font-family: 'DejaVu Sans Mono', monospace; letter-spacing: -0.02em; }
+.status { display: inline-flex; align-items: center; gap: 12px; border-radius: 999px; padding: 12px 24px; font: 700 28px Inter; white-space: nowrap; }
+.status .dot { width: 14px; height: 14px; border-radius: 50%; background: currentColor; }
+.s-grey { background: #EEF0F5; color: var(--grey); }
+.s-amber { background: #FFF1C2; color: #8A5A00; }
+.s-green { background: #DDF8E7; color: #137A3A; }
+.thumb { position: absolute; width: 104px; height: 64px; border-radius: 10px; overflow: hidden; background: #fff; }
+.thumb svg { width: 100%; height: 100%; display: block; }
+.thumb span { position: absolute; left: 5px; bottom: 3px; font: 600 12px 'DejaVu Sans Mono', monospace; color: #fff; background: rgba(20,21,43,0.7); border-radius: 4px; padding: 1px 4px; }
+.bubble { position: absolute; border-radius: 30px; padding: 26px 34px; font: 600 38px Inter; letter-spacing: -0.015em; line-height: 1.25; }
+.wave { display: flex; align-items: center; gap: 5px; height: 56px; margin-top: 14px; }
+.wave div { width: 8px; border-radius: 4px; background: currentColor; }
+.row { display: flex; align-items: center; gap: 14px; }
+.lbl { font: 700 18px Inter; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey); }
+#synthetic { position: absolute; top: 28px; right: 34px; font: 600 19px Inter; letter-spacing: 0.02em; padding: 7px 16px; border-radius: 999px; z-index: 50; }
+#subs { position: absolute; left: 0; right: 0; bottom: 40px; display: flex; justify-content: center; z-index: 50; pointer-events: none; }
+#subs div { background: rgba(20,21,43,0.88); color: #fff; font: 600 34px Inter; padding: 12px 28px; border-radius: 16px; max-width: 1500px; text-align: center; }
+#subs small { display: block; font: 700 17px Inter; letter-spacing: 0.12em; text-transform: uppercase; color: var(--yel); margin-bottom: 4px; }
+#fade { position: absolute; inset: 0; background: var(--navy); z-index: 60; opacity: 0; }
+#ui { position: fixed; left: 0; right: 0; bottom: 0; height: 18px; background: rgba(0,0,0,0.5); z-index: 99; cursor: pointer; display: none; }
+#ui div { height: 100%; background: var(--yel); width: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- S0 HOOK -->
+<section class="scene light" id="s0">
+  <div class="a hl" id="h0" style="left:150px; top:290px; font-size:200px;">
+    <span id="h0a" style="display:inline-block"><span class="pill">Ask</span></span>
+    <span id="h0b" style="display:inline-block">before</span><br>
+    <span id="h0c" style="display:inline-block">you flag.</span>
+  </div>
+  <div class="a sub" id="sub0" style="left:158px; top:740px; font-size:44px;">Better evidence. Better training data.</div>
+  <svg class="a" id="q0" width="300" height="300" viewBox="0 0 300 300" style="left:1450px; top:300px;">
+    <path d="M40 40 h220 a30 30 0 0 1 30 30 v120 a30 30 0 0 1 -30 30 h-120 l-60 50 v-50 h-40 a30 30 0 0 1 -30 -30 v-120 a30 30 0 0 1 30 -30z" fill="#2F5BFF"/>
+    <text x="150" y="182" text-anchor="middle" font-family="Disp" font-weight="900" font-size="150" fill="#fff">?</text>
+  </svg>
+</section>
+
+<!-- S1 SAME MOTION / DIFFERENT EVIDENCE -->
+<section class="scene dark" id="s1">
+  <div class="a hl" id="h1" style="left:100px; top:90px; font-size:104px;">Same motion.<br>Different <span class="pill">evidence</span>.</div>
+  <div class="a sub" id="sub1" style="left:104px; top:330px;">Repetition alone isn't proof of fraud.</div>
+  <div class="card" id="c1a" style="left:100px; top:420px; width:840px; height:560px; padding:0;">
+    <div class="row" style="padding:22px 28px 10px; justify-content:space-between;">
+      <span style="font:700 30px Inter;">Clip A · Same bracket, bolted and unbolted</span>
+    </div>
+    <div id="b1a" style="height:400px; margin:0 20px;"></div>
+    <div class="row" style="padding:6px 28px; font:600 26px Inter; color:var(--grey);">Finished bin: <span class="mono" id="n1a" style="color:var(--navy); font-weight:700;">0</span></div>
+  </div>
+  <div class="card" id="c1b" style="left:980px; top:420px; width:840px; height:560px; padding:0;">
+    <div class="row" style="padding:22px 28px 10px;">
+      <span style="font:700 30px Inter;">Clip B · New brackets into the finished bin</span>
+    </div>
+    <div id="b1b" style="height:400px; margin:0 20px;"></div>
+    <div class="row" style="padding:6px 28px; font:600 26px Inter; color:var(--grey);">Finished bin: <span class="mono" id="n1b" style="color:var(--navy); font-weight:700;">0</span></div>
+  </div>
+</section>
+
+<!-- S2 STAGE 1 UNDERSTAND -->
+<section class="scene light" id="s2">
+  <div class="a stagetag" id="st2" style="left:100px; top:70px;"><b>1</b>Understand</div>
+  <div class="a hl" id="h2" style="left:100px; top:135px; font-size:96px;">Start with the <span class="pill">task</span>.</div>
+  <div class="a sub" id="sub2" style="left:104px; top:250px;">Jev pins relevant references before any video is processed.</div>
+
+  <div class="chip c-shift" id="ch2s" style="left:100px; top:350px;"><i>S</i>Shift</div>
+  <div class="card" id="chat2" style="left:100px; top:440px; width:700px; height:440px;">
+    <div class="lbl">New session · Shift</div>
+    <div class="bubble" id="bq2" style="position:relative; margin-top:26px; background:#E6ECFF; color:var(--navy); display:inline-block; border-bottom-left-radius:8px;">What are you planning to do?</div>
+    <div style="text-align:right; margin-top:26px;">
+      <div class="lbl" id="bl2" style="margin-bottom:10px;">Contributor</div>
+      <div class="bubble" id="ba2" style="position:relative; background:var(--navy); color:#fff; display:inline-block; border-bottom-right-radius:8px;">I'm assembling brackets.</div>
+    </div>
+  </div>
+  <svg class="a" id="arr2" width="110" height="60" viewBox="0 0 110 60" style="left:808px; top:630px;">
+    <path id="arr2p" d="M6 30 H92 M74 12 L96 30 L74 48" fill="none" stroke="#14152B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="chip c-jev" id="ch2j" style="left:930px; top:350px;"><i>J</i>Jev</div>
+  <div class="a row" id="db2" style="left:1130px; top:362px; font:600 26px Inter; color:var(--grey);">
+    <svg width="34" height="40" viewBox="0 0 34 40"><ellipse cx="17" cy="7" rx="15" ry="6" fill="none" stroke="#646A7E" stroke-width="3"/><path d="M2 7 v26 a15 6 0 0 0 30 0 v-26 M2 20 a15 6 0 0 0 30 0" fill="none" stroke="#646A7E" stroke-width="3"/></svg>
+    retrieves from the reference database
+  </div>
+  <div class="card" id="r2a" style="left:930px; top:440px; width:890px; height:200px;">
+    <div class="row" style="justify-content:space-between;"><span class="tag t-blue">Legitimate example</span><span class="tag t-sim">Illustrative</span></div>
+    <div style="font:600 31px Inter; margin-top:18px; line-height:1.3;">Bracket bolted, then moved to the finished bin. The bin count grows batch to batch.</div>
+    <svg class="a pin" id="p2a" width="44" height="56" viewBox="0 0 44 56" style="right:-14px; top:-22px;"><path d="M22 2 a18 18 0 0 1 18 18 c0 13 -18 34 -18 34 s-18 -21 -18 -34 a18 18 0 0 1 18 -18z" fill="#FF5A4F"/><circle cx="22" cy="20" r="7" fill="#fff"/></svg>
+  </div>
+  <div class="card" id="r2b" style="left:930px; top:668px; width:890px; height:200px;">
+    <div class="row" style="justify-content:space-between;"><span class="tag t-coral">Suspicious example</span><span class="tag t-sim">Illustrative</span></div>
+    <div style="font:600 31px Inter; margin-top:18px; line-height:1.3;">Same bracket bolted and unbolted again and again. No finished output appears.</div>
+    <svg class="a pin" id="p2b" width="44" height="56" viewBox="0 0 44 56" style="right:-14px; top:-22px;"><path d="M22 2 a18 18 0 0 1 18 18 c0 13 -18 34 -18 34 s-18 -21 -18 -34 a18 18 0 0 1 18 -18z" fill="#FF5A4F"/><circle cx="22" cy="20" r="7" fill="#fff"/></svg>
+  </div>
+  <div class="a row" id="saved2" style="left:930px; top:900px; background:var(--navy); color:#fff; border-radius:999px; padding:14px 28px 14px 18px; font:700 28px Inter;">
+    <svg width="30" height="38" viewBox="0 0 44 56"><path d="M22 2 a18 18 0 0 1 18 18 c0 13 -18 34 -18 34 s-18 -21 -18 -34 a18 18 0 0 1 18 -18z" fill="#FFC400"/><circle cx="22" cy="20" r="7" fill="#14152B"/></svg>
+    Session references saved <span style="font-weight:500; color:var(--grey2);">· retrieved once, before batches</span>
+  </div>
+</section>
+
+<!-- S3 STAGE 2 OBSERVE -->
+<section class="scene dark" id="s3">
+  <div class="a stagetag" id="st3" style="left:100px; top:70px;"><b>2</b>Observe</div>
+  <div class="a hl" id="h3" style="left:100px; top:135px; font-size:96px;">Then <span class="pill">observe</span>.</div>
+  <div class="a sub" id="sub3" style="left:104px; top:250px;">10 images per batch. Flash turns them into text. Jev compares.</div>
+
+  <div class="chip c-shift" id="ch3s" style="left:100px; top:340px;"><i>S</i>Shift</div>
+  <div class="card" id="live3" style="left:100px; top:420px; width:560px; height:320px; padding:0; overflow:hidden;">
+    <div id="b3" style="position:absolute; inset:0;"></div>
+    <div class="a tag" style="left:16px; top:16px; background:var(--coral); color:#fff;"><span class="dot" id="rec3" style="width:12px;height:12px;border-radius:50%;background:#fff;display:inline-block;"></span>Live</div>
+  </div>
+  <div class="a row" id="lb3" style="left:100px; top:764px; width:560px; justify-content:space-between;">
+    <span style="font:700 24px Inter;">Batch 1 · 10 images / 10 s</span>
+    <span class="tag t-yel" id="tc3">Timing condensed</span>
+  </div>
+  <div id="th3"></div>
+  <div id="fly3"></div>
+
+  <div class="chip c-flash" id="ch3f" style="left:720px; top:340px;"><i>G</i>Gemini Flash</div>
+  <div class="card" id="fl3" style="left:720px; top:420px; width:520px; height:540px;">
+    <div class="row" style="justify-content:space-between;"><span class="lbl">Structured annotations</span><span class="tag t-sim">Simulated</span></div>
+    <div class="mono" id="rows3" style="font-size:23px; line-height:1.55; margin-top:18px; color:#2A2C44;">
+      <div><b style="color:var(--blue)">00:01</b> bolt bracket to plate</div>
+      <div><b style="color:var(--blue)">00:04</b> remove bolt, lift bracket</div>
+      <div><b style="color:var(--blue)">00:06</b> set same bracket down</div>
+      <div><b style="color:var(--blue)">00:08</b> bolt same bracket again</div>
+    </div>
+    <div style="height:2px; background:var(--line); margin:22px 0 18px;" id="sep3"></div>
+    <div class="lbl" id="obl3">Observations</div>
+    <div id="obs3" style="font:700 29px Inter; line-height:1.3; margin-top:12px;">
+      <div style="margin-bottom:10px;">“Same bracket bolted, then unbolted.”</div>
+      <div>“No finished parts visible.”</div>
+    </div>
+  </div>
+
+  <div class="chip c-jev" id="ch3j" style="left:1300px; top:340px;"><i>J</i>Jev</div>
+  <div class="card" id="jv3" style="left:1300px; top:420px; width:520px; height:540px;">
+    <div class="lbl">Compare with</div>
+    <div id="in3" style="margin-top:14px;">
+      <div class="row" style="padding:14px 0; border-bottom:2px solid var(--line);"><svg class="ck" width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#2F5BFF"/><path d="M10 17 l5 5 l9 -10" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg><div><div style="font:700 26px Inter;">Declared task</div><div style="font:500 22px Inter; color:var(--grey);">assembling brackets</div></div></div>
+      <div class="row" style="padding:14px 0; border-bottom:2px solid var(--line);"><svg class="ck" width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#2F5BFF"/><path d="M10 17 l5 5 l9 -10" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg><div><div style="font:700 26px Inter;">Pinned references</div><div style="font:500 22px Inter; color:var(--grey);">1 legitimate · 1 suspicious</div></div></div>
+      <div class="row" style="padding:14px 0;"><svg class="ck" width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#2F5BFF"/><path d="M10 17 l5 5 l9 -10" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg><div><div style="font:700 26px Inter;">Session context</div><div style="font:500 22px Inter; color:var(--grey);">no answers yet</div></div></div>
+    </div>
+    <div id="fn3" style="margin-top:22px; font:600 23px Inter; color:var(--grey); line-height:1.35;">Jev compares and routes.<br>It doesn't write questions.</div>
+    <div style="position:absolute; left:32px; bottom:32px;">
+      <div class="status s-grey" id="sg3"><span class="dot"></span>Comparing…</div>
+      <div class="status s-amber" id="sa3" style="position:absolute; left:0; top:0;"><span class="dot"></span>Needs clarification</div>
+    </div>
+  </div>
+</section>
+
+<!-- S4 STAGE 3 CLARIFY -->
+<section class="scene light" id="s4">
+  <div class="a stagetag" id="st4" style="left:100px; top:70px;"><b>3</b>Clarify</div>
+  <div class="a hl" id="h4" style="left:100px; top:135px; font-size:96px;">Then <span class="pill">ask</span>.</div>
+  <div class="a sub" id="sub4" style="left:104px; top:250px;">Astra reviews the images and the text, then asks one question.</div>
+
+  <!-- phase A -->
+  <div class="chip c-jev" id="ch4j" style="left:100px; top:350px;"><i>J</i>Jev</div>
+  <div class="card" id="jm4" style="left:100px; top:440px; width:440px; height:230px;">
+    <div class="status s-amber" style="font-size:25px;"><span class="dot"></span>Needs clarification</div>
+    <div style="font:700 30px Inter; margin-top:22px;">Escalate to Astra →</div>
+    <div style="font:500 22px Inter; color:var(--grey); margin-top:8px;">with the full evidence bundle</div>
+  </div>
+  <div class="card" id="bd4" style="left:600px; top:420px; width:620px; height:350px; background:var(--navy); color:#fff;">
+    <div class="row" style="justify-content:space-between;"><span style="font:700 30px Inter;">Evidence bundle</span><span class="tag" style="background:rgba(255,255,255,0.12); color:#fff;">Batch 1</span></div>
+    <div id="bdr4" style="margin-top:16px;">
+      <div class="row" style="padding:12px 0;"><div id="bdth4" style="display:flex; gap:4px;"></div><span style="font:700 25px Inter;">Original images</span></div>
+      <div class="row" style="padding:12px 0; border-top:2px solid rgba(255,255,255,0.12);"><span class="tag" style="background:var(--yel); color:var(--navy);">Text</span><span style="font:700 25px Inter;">Structured annotations</span></div>
+      <div class="row" style="padding:12px 0; border-top:2px solid rgba(255,255,255,0.12);"><span class="tag" style="background:#E6ECFF; color:var(--blue);">Refs</span><span style="font:700 25px Inter;">Pinned reference annotations</span></div>
+      <div class="row" style="padding:12px 0; border-top:2px solid rgba(255,255,255,0.12);"><span class="tag" style="background:rgba(255,255,255,0.14); color:#fff;">Context</span><span style="font:700 25px Inter;">Task, Jev's reason, history</span></div>
+    </div>
+  </div>
+  <div class="chip c-astra" id="ch4a" style="left:1300px; top:350px;"><i>A</i>Astra</div>
+  <div class="card" id="as4" style="left:1300px; top:440px; width:520px; height:400px; overflow:hidden;">
+    <div class="lbl">Reviews images + text</div>
+    <div id="asth4" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin-top:16px; position:relative;"></div>
+    <div id="scan4" class="a" style="left:32px; width:456px; height:4px; background:var(--coral); top:90px; border-radius:2px;"></div>
+    <div class="lbl" style="margin-top:22px;" id="gql4">Generated question</div>
+    <div id="gq4" style="font:700 30px Inter; margin-top:10px; line-height:1.25; min-height:76px;"></div>
+  </div>
+
+  <!-- phase B -->
+  <div class="chip c-eleven" id="ch4e" style="left:100px; top:350px;"><i>E</i>ElevenLabs</div>
+  <div class="bubble" id="qb4" style="left:100px; top:440px; width:1060px; background:#fff; color:var(--navy); box-shadow:0 0 0 2px var(--line); border-top-left-radius:8px;">
+    <div class="row lbl" style="margin-bottom:10px;"><span style="color:#D9362C;">Astra's question</span><span>· voiced by ElevenLabs in Shift</span></div>
+    Are you reassembling the same bracket?
+    <div class="wave" id="wq4" style="color:var(--violet);"></div>
+  </div>
+  <div class="bubble" id="ab4" style="left:200px; top:720px; width:1060px; background:var(--navy); color:#fff; border-top-right-radius:8px;">
+    <div class="row lbl" style="margin-bottom:10px; color:var(--grey2);"><span>Contributor</span><span class="tag" id="tr4" style="background:rgba(139,92,246,0.25); color:#D9CCFF; font-size:16px;">Transcribed · ElevenLabs</span></div>
+    Redoing a loose bolt. The finished bin is on my right.
+    <div class="wave" id="wa4" style="color:var(--yel);"></div>
+  </div>
+  <div class="card" id="cx4" style="left:1380px; top:350px; width:440px; height:560px;">
+    <div class="lbl">Session context</div>
+    <div style="margin-top:14px; font:600 24px Inter; line-height:1.35;">
+      <div style="padding:12px 0; border-bottom:2px solid var(--line);"><span style="color:var(--grey);">Task</span><br>assembling brackets</div>
+      <div style="padding:12px 0; border-bottom:2px solid var(--line);"><span style="color:var(--grey);">Batch 1</span><br>needs clarification</div>
+      <div id="cxa4" style="padding:12px 0;"><span style="color:var(--grey);">Answer</span><br>“Redoing a loose bolt. The finished bin is on my right.”</div>
+    </div>
+    <div id="cxn4" class="status s-amber" style="position:absolute; left:28px; bottom:28px; font-size:19px; padding:9px 16px; gap:9px;"><span class="dot"></span>Context added · concern still open</div>
+  </div>
+  <div class="bubble" id="fly4" style="left:200px; top:720px; width:440px; background:var(--navy); color:#fff; font-size:24px; padding:14px 20px; display:none;">“Redoing a loose bolt…”</div>
+
+  <!-- phase C -->
+  <div class="chip c-shift" id="ch4s" style="left:100px; top:350px;"><i>S</i>Shift</div>
+  <div class="card" id="nb4" style="left:100px; top:440px; width:640px; height:350px; padding:0; overflow:hidden;">
+    <div id="b4" style="position:absolute; inset:0;"></div>
+    <div class="a tag" style="left:16px; top:16px; background:var(--coral); color:#fff;">Live</div>
+  </div>
+  <div class="a row" id="nbl4" style="left:100px; top:812px; width:640px; justify-content:space-between;">
+    <span style="font:700 24px Inter;">Batch 2 · next 10 images</span>
+    <span class="tag" style="box-shadow:inset 0 0 0 2px var(--navy); color:var(--navy);">Timing condensed</span>
+  </div>
+  <div id="th4"></div>
+  <div class="chip c-flash" id="ch4f" style="left:800px; top:350px;"><i>G</i>Gemini Flash</div>
+  <div class="card" id="fl4" style="left:800px; top:440px; width:520px; height:270px;">
+    <div class="row" style="justify-content:space-between;"><span class="lbl">Batch 2 annotations</span><span class="tag t-sim">Simulated</span></div>
+    <div id="o4a" style="font:700 29px Inter; margin-top:22px;">“Finished bin visible: 4 brackets.”</div>
+    <div id="o4b" style="font:700 29px Inter; margin-top:14px;">“New bracket added to the bin.”</div>
+  </div>
+  <div class="card" id="jr4" style="left:800px; top:740px; width:520px; height:210px;">
+    <div class="row"><div class="chip c-jev inline"><i>J</i>Jev</div><span style="font:600 22px Inter; color:var(--grey);">reassesses with updated context</span></div>
+    <div style="position:relative; margin-top:24px; height:60px;">
+      <div class="status s-amber" id="ja4" style="position:absolute; font-size:25px;"><span class="dot"></span>Reassessing…</div>
+      <div class="status s-green" id="jg4" style="position:absolute; font-size:25px;"><span class="dot"></span>Progress observed — continue</div>
+    </div>
+  </div>
+</section>
+
+<!-- S5 PUNCHLINE -->
+<section class="scene dark" id="s5">
+  <div class="a hl" id="h5a" style="left:150px; top:300px; font-size:120px;">The answer adds context.</div>
+  <div class="a hl" id="h5b" style="left:150px; top:450px; font-size:120px;">The next batch adds <span class="pill">evidence</span>.</div>
+  <div class="a sub" id="sub5" style="left:156px; top:650px;">Illustrative scenario. A filling bin shows progress, not a fraud-free session.</div>
+</section>
+
+<!-- S6 CLOSE -->
+<section class="scene light" id="s6">
+  <div class="a hl" id="h6" style="left:110px; top:180px; font-size:108px;">Catch problems<br>while they can<br>still be <span class="pill">fixed</span>.</div>
+  <div class="a row" id="cta6" style="left:114px; top:610px; background:var(--blue); color:#fff; border-radius:999px; padding:22px 40px; font:700 36px Inter;">Explore the architecture →</div>
+  <div class="a" id="pn6" style="left:114px; top:760px;">
+    <div style="font:900 50px Disp; letter-spacing:-0.03em;">AI Physical Hack</div>
+    <div class="mono" style="font-size:30px; color:var(--grey); margin-top:10px;">github.com/lukaschudy/ai-physical-hack</div>
+  </div>
+  <svg class="a" id="iso6" width="900" height="900" viewBox="0 0 900 900" style="left:990px; top:90px;"></svg>
+</section>
+
+<div id="synthetic">Synthetic scenario · simulated outputs</div>
+<div id="subs"></div>
+<div id="fade"></div>
+</div>
+<div id="ui"><div></div></div>
+
+<script>
+// ---------- timeline constants (seconds) ----------
+const DURATION = 75, FPS = 30, WIPE = 0.7;
+const SCENES = [ // id, start, theme
+  ["s0", 0, "light"], ["s1", 6, "dark"], ["s2", 13, "light"], ["s3", 27, "dark"],
+  ["s4", 46, "light"], ["s5", 66, "dark"], ["s6", 70, "light"],
+];
+const T_Q = 54.0;  // Astra's question voice starts (ElevenLabs)
+const T_A = 56.3;  // contributor answer starts
+const SPEECH = [
+  { file: "audio/agent_question.wav", t: T_Q },
+  { file: "audio/contributor_answer.wav", t: T_A },
+];
+const SUBS = [
+  [T_Q + 0.05, T_Q + 1.75, "Astra · voiced by ElevenLabs", "Are you reassembling the same bracket?"],
+  [T_A + 0.05, T_A + 1.3, "Contributor", "Redoing a loose bolt."],
+  [T_A + 1.45, T_A + 2.75, "Contributor", "The finished bin is on my right."],
+];
+// RMS envelopes of the two speech files at 30 fps (from audio/*.wav), drive the waveforms.
+const ENV = {"q":[0.0,0.0,0.91,1.0,0.7,0.57,0.58,0.52,0.21,0.46,0.65,0.7,0.82,0.48,0.35,0.26,0.21,0.5,0.55,0.48,0.38,0.32,0.32,0.51,0.4,0.35,0.33,0.34,0.21,0.27,0.23,0.25,0.38,0.37,0.31,0.3,0.12,0.36,0.65,0.68,0.68,0.43,0.07,0.04,0.23,0.38,0.32,0.16,0.02,0,0,0,0,0,0,0,0,0,0,0],
+ "a":[0.0,0.02,0.51,0.99,0.98,0.51,0.25,0.75,0.83,0.71,0.62,0.57,0.44,0.37,0.46,0.23,0.22,0.36,0.45,0.32,0.14,0.12,0.04,0.0,0.01,0.52,0.55,0.34,0.14,0.11,0.01,0.01,0.05,0.02,0,0,0,0,0,0,0,0,0,0,0.02,0.14,0.07,0.13,1.0,0.74,0.76,0.35,0.27,0.07,0.0,0.05,0.88,0.9,0.76,0.63,0.44,0.33,0.29,0.13,0.13,0.34,0.38,0.17,0.22,0.34,0.31,0.28,0.27,0.47,0.32,0.19,0.11,0.02,0,0,0,0,0,0,0,0,0,0,0,0]};
+
+// Local times inside each scene (seconds after the scene starts).
+const K = {
+  s0: { a: 0.35, b: 0.6, c: 0.85, sub: 1.7, q: 2.4 },
+  s1: { h: 0.8, sub: 1.5, ca: 1.8, cb: 2.05, run: 2.4 },
+  s2: { tag: 0.8, h: 1.0, sub: 1.5, chS: 2.0, chat: 2.3, bq: 2.8, ba: 4.0, chJ: 5.2, arr: 5.5, db: 5.8, ra: 6.4, rb: 7.0, pins: 8.6, saved: 9.4 },
+  s3: { tag: 0.8, h: 1.0, sub: 1.5, chS: 2.1, live: 2.5, lb: 3.1, th: 3.4, thStep: 0.3, chF: 6.8, fl: 7.2, fly: 7.7, rows: [8.6, 9.2, 9.8, 10.4], obs: [11.1, 11.8], chJ: 12.4, jv: 12.8, comp: 13.3, checks: [13.7, 14.3, 14.9], amber: 15.9, fn: 16.8 },
+  s4: { tag: 0.8, h: 1.0, sub: 1.5, chJ: 1.8, jm: 2.1, chA: 2.4, as: 2.7, bd: 2.9, bdRows: [3.3, 3.65, 4.0, 4.35], travel: 4.9, scan: 6.0, gq: 6.5, outA: 7.3,
+        chE: 7.4, qb: 7.6, ab: T_A - 46 - 0.25, tr: 13.0, flyStart: 13.3, flyEnd: 14.1, cxn: 14.2, outB: 14.6,
+        chS: 14.9, nb: 15.1, pan: 15.5, cyc: 16.4, thC: 15.3, chF: 16.0, fl: 16.3, o4a: 16.9, o4b: 18.0, jr: 18.2, green: 19.0 },
+  s5: { a: 0.8, b: 1.6, sub: 2.3 },
+  s6: { slabs: 0.7, slabStep: 0.28, h: 0.9, cta: 2.3, pn: 2.7, fade: 4.2 },
+};
+
+// ---------- sound cues, built from the same constants ----------
+const CUES = [];
+const cue = (t, type, p = 0) => CUES.push({ t: +t.toFixed(3), type, p });
+function buildCues() {
+  SCENES.forEach(([id, s], i) => { if (i) { cue(s, "whoosh"); cue(s + WIPE - 0.05, "hit"); } cue(s, "pad", i); });
+  const S = Object.fromEntries(SCENES.map(([id, s]) => [id, s]));
+  const k0 = K.s0; [k0.a, k0.b, k0.c].forEach((x, i) => cue(x, "tick", i)); cue(k0.q, "tick", 4);
+  const k1 = K.s1; cue(S.s1 + k1.ca, "tick", 1); cue(S.s1 + k1.cb, "tick", 3);
+  const k2 = K.s2; for (const [x, p] of [[k2.chS, 2], [k2.bq, 3], [k2.ba, 4], [k2.chJ, 2], [k2.ra, 5], [k2.rb, 6], [k2.pins, 7], [k2.saved, 8]]) cue(S.s2 + x, "tick", p);
+  const k3 = K.s3; cue(S.s3 + k3.chS, "tick", 2);
+  for (let i = 0; i < 10; i++) cue(S.s3 + k3.th + i * k3.thStep, "tick", 5 + (i % 5));
+  cue(S.s3 + k3.chF, "tick", 3); cue(S.s3 + k3.fly, "swish");
+  k3.rows.forEach((x, i) => cue(S.s3 + x, "tick", 4 + i)); k3.obs.forEach((x, i) => cue(S.s3 + x, "tick", 8 + i));
+  cue(S.s3 + k3.chJ, "tick", 2); k3.checks.forEach((x, i) => cue(S.s3 + x, "tick", 5 + i)); cue(S.s3 + k3.amber, "amber");
+  const k4 = K.s4; cue(S.s4 + k4.chJ, "tick", 2); cue(S.s4 + k4.chA, "tick", 4);
+  k4.bdRows.forEach((x, i) => cue(S.s4 + x, "tick", 5 + i)); cue(S.s4 + k4.travel, "swish"); cue(S.s4 + k4.gq, "tick", 9);
+  cue(S.s4 + k4.chE, "tick", 3); cue(T_Q - 0.45, "notify"); cue(S.s4 + k4.tr, "tick", 6); cue(S.s4 + k4.flyStart, "swish");
+  cue(S.s4 + k4.chS, "tick", 2); cue(S.s4 + k4.chF, "tick", 3); cue(S.s4 + k4.cyc + 1.5, "tick", 8);
+  cue(S.s4 + k4.o4a, "tick", 6); cue(S.s4 + k4.o4b, "tick", 7); cue(S.s4 + k4.green, "chime");
+  const k5 = K.s5; cue(S.s5 + k5.a, "tick", 3); cue(S.s5 + k5.b, "tick", 5);
+  const k6 = K.s6; for (let i = 0; i < 5; i++) cue(S.s6 + k6.slabs + i * k6.slabStep + 0.35, "tick", 2 + i * 2); cue(S.s6 + k6.cta, "tick", 9);
+  CUES.sort((a, b) => a.t - b.t);
+}
+
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lin = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const eOut = (p) => 1 - Math.pow(1 - p, 3);
+const eInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const eBack = (p) => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+function st(el, { o = 1, x = 0, y = 0, s = 1, r = 0 } = {}) {
+  el.style.opacity = o.toFixed(3);
+  el.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${s.toFixed(4)}) rotate(${r.toFixed(2)}deg)`;
+  el.style.visibility = o <= 0.001 ? "hidden" : "visible";
+}
+// fade + rise in at t0; optional fade out at t1
+function appear(el, lt, t0, { dur = 0.5, dy = 34, out = null, outDur = 0.4, s0 = 1 } = {}) {
+  const p = eOut(lin(lt, t0, t0 + dur));
+  let o = p;
+  if (out !== null) o *= 1 - lin(lt, out, out + outDur);
+  st(el, { o, y: (1 - p) * dy, s: lerp(s0, 1, p) });
+}
+// chip: drop in with tilt + overshoot, then float
+function chip(el, lt, t0, out = null, phase = 0) {
+  const p = lin(lt, t0, t0 + 0.65), e = eBack(p);
+  const live = clamp((lt - t0 - 0.65) * 1.5);
+  let o = clamp(p * 4);
+  if (out !== null) o *= 1 - lin(lt, out, out + 0.35);
+  st(el, { o, y: lerp(-80, 0, e) + Math.sin((lt - t0) * 2.1 + phase) * 4 * live, r: lerp(-12, 0, e) + Math.sin((lt - t0) * 1.6 + phase) * 0.9 * live });
+}
+function typeText(el, full, lt, t0, cps = 38) {
+  const n = Math.floor(clamp((lt - t0) * cps, 0, full.length));
+  el.textContent = full.slice(0, n);
+}
+
+// ---------- workbench illustration (deterministic SVG) ----------
+const STEEL = "#7C8BAE", STEEL_D = "#55628A";
+function bracketSVG(x, y, rot = 0, s = 1, bolt = 0) {
+  // L-bracket standing on (x, y); bolt: 0 = seated, >0 = lifted by px (-1 hides)
+  const b = bolt < 0 ? "" : `<g transform="translate(${62}, ${-14 - bolt})"><rect x="-9" y="-12" width="18" height="12" rx="2" fill="#3B4258"/><rect x="-3" y="0" width="6" height="${bolt > 0 ? 10 : 2}" fill="#3B4258"/></g>`;
+  return `<g transform="translate(${x},${y}) rotate(${rot}) scale(${s})">
+    <rect x="0" y="-96" width="20" height="96" rx="3" fill="${STEEL}" stroke="${STEEL_D}" stroke-width="3"/>
+    <rect x="0" y="-16" width="92" height="16" rx="3" fill="${STEEL}" stroke="${STEEL_D}" stroke-width="3"/>
+    <circle cx="10" cy="-70" r="4" fill="${STEEL_D}"/>${b}</g>`;
+}
+function wrenchSVG(x, y, ang) {
+  return `<g transform="translate(${x},${y}) rotate(${ang})">
+    <rect x="10" y="-8" width="150" height="16" rx="8" fill="#2B2F3A"/>
+    <circle cx="0" cy="0" r="17" fill="#2B2F3A"/><rect x="-8" y="-24" width="16" height="16" fill="#E9ECF3"/>
+    <rect x="132" y="-15" width="48" height="30" rx="13" fill="#F4A261"/></g>`;
+}
+function binSVG(x, n) {
+  let s = "";
+  for (let i = 0; i < n; i++) { // finished brackets lie flat, stacking up out of the bin
+    const y = 212 - i * 15;
+    s += `<rect x="${x + 22}" y="${y}" width="100" height="12" rx="3" fill="${STEEL}" stroke="${STEEL_D}" stroke-width="3"/><rect x="${x + 22}" y="${y - 10}" width="14" height="12" rx="2" fill="${STEEL}" stroke="${STEEL_D}" stroke-width="3"/>`;
+  }
+  s += `<rect x="${x - 6}" y="214" width="156" height="12" rx="4" fill="#1F3FCC"/>`;
+  s += `<path d="M${x} 220 h144 l-10 46 h-124 z" fill="#2F5BFF"/>`;
+  s += `<text x="${x + 72}" y="252" text-anchor="middle" font-family="Inter" font-weight="700" font-size="17" letter-spacing="2" fill="#fff">FINISHED</text>`;
+  return s;
+}
+// mode A: same bracket bolted, unbolted, re-seated, bolted again. mode B: bracket moves to the bin, new one arrives.
+const P = 2.6;
+function bench({ t = 0, mode = "A", binX = 420, base = 0, showBin = true, vx = 0, width = 560, height = 280 }) {
+  const k = Math.floor(t / P), c = t - k * P;
+  const PX = 130, PY = 266; // bracket position on the base plate
+  let parts = "", count = base, bx = PX, by = PY, rot = 0, bolt = 0, wr = null, extra = "";
+  const twist = (c0, c1) => Math.sin(lin(c, c0, c1) * Math.PI * 3) * 24;
+  if (mode === "A") {
+    if (c < 0.9) wr = twist(0, 0.9);
+    bolt = lerp(0, 34, eOut(lin(c, 0.95, 1.2))) - lerp(0, 34, eInOut(lin(c, 1.85, 2.1)));
+    by = PY - lerp(0, 46, eOut(lin(c, 1.2, 1.45))) + lerp(0, 46, eInOut(lin(c, 1.55, 1.8)));
+    rot = -7 * Math.sin(lin(c, 1.2, 1.8) * Math.PI);
+    if (c > 2.1 && c < 2.55) wr = twist(2.1, 2.55);
+  } else {
+    if (c < 0.9) wr = twist(0, 0.9);
+    const p = eInOut(lin(c, 0.95, 1.55));
+    count = base + k + (c >= 1.55 ? 1 : 0);
+    if (c < 1.55) { bx = lerp(PX, binX + 30, p); by = PY - Math.sin(p * Math.PI) * 110 - p * 40; rot = p * 70; }
+    else { bx = -999; }
+    const q = eOut(lin(c, 1.7, 2.3));
+    if (c >= 1.6) extra = bracketSVG(lerp(-160, PX, q), PY, 0, 1, -1);
+  }
+  parts += `<rect x="-400" y="0" width="1800" height="250" fill="#E4E8F1"/>`;
+  for (let i = 0; i < 26; i++) for (let j = 0; j < 4; j++) parts += `<circle cx="${-380 + i * 60 + (j % 2) * 30}" cy="${40 + j * 50}" r="4" fill="#CDD3E1"/>`;
+  parts += `<rect x="-400" y="266" width="1800" height="26" fill="#3B4258"/><rect x="-400" y="292" width="1800" height="120" fill="#4C556E"/>`;
+  parts += `<rect x="${PX - 30}" y="252" width="190" height="16" rx="3" fill="#A3ABBF"/>`;
+  if (showBin) parts += binSVG(binX, Math.max(0, count));
+  if (bx > -500) parts += bracketSVG(bx, by, rot, 1, mode === "B" && c >= 0.95 ? 0 : bolt);
+  parts += extra;
+  if (wr !== null) parts += wrenchSVG(PX + 62, PY - 22, -28 + wr);
+  return { svg: `<svg viewBox="${vx + 20} 60 ${width} ${height}" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">${parts}</svg>`, count };
+}
+
+// ---------- static setup ----------
+const thumbsA = [], TH_T = [0.3, 0.6, 1.0, 1.15, 1.35, 1.5, 1.7, 1.95, 2.25, 2.45];
+function setup() {
+  // stage 2 thumbnails (5x2 grid)
+  const th3 = $("th3"), fly3 = $("fly3");
+  TH_T.forEach((tt, i) => {
+    const svg = bench({ t: tt, mode: "A", showBin: false }).svg;
+    thumbsA.push(svg);
+    const x = 100 + (i % 5) * 114, y = 810 + Math.floor(i / 5) * 74;
+    const d = document.createElement("div"); d.className = "thumb"; d.id = "t3_" + i;
+    d.style.left = x + "px"; d.style.top = y + "px"; d.innerHTML = svg + `<span>00:0${i}</span>`;
+    th3.appendChild(d);
+    const f = d.cloneNode(true); f.id = "f3_" + i; fly3.appendChild(f);
+  });
+  // stage 3 bundle mini thumbs + Astra review grid
+  $("bdth4").innerHTML = thumbsA.slice(0, 4).map((s) => `<div style="width:56px;height:36px;border-radius:6px;overflow:hidden;background:#fff">${s}</div>`).join("");
+  $("asth4").innerHTML = thumbsA.map((s) => `<div style="height:52px;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 0 0 2px #E3E6EE">${s}</div>`).join("");
+  // stage 3 next-batch strip
+  const th4 = $("th4");
+  for (let i = 0; i < 10; i++) {
+    const d = document.createElement("div"); d.className = "thumb"; d.id = "t4_" + i;
+    d.style.cssText = `left:${100 + i * 64}px; top:860px; width:56px; height:36px;`;
+    d.innerHTML = bench({ t: 0.2 + i * 0.26, mode: "B", base: 4 }).svg;
+    th4.appendChild(d);
+  }
+  // waveform bars
+  for (const id of ["wq4", "wa4"]) $(id).innerHTML = Array.from({ length: 48 }, () => "<div></div>").join("");
+  // isometric layers
+  const iso = $("iso6"), COLS = [["#2F5BFF", "Shift"], ["#14152B", "Jev"], ["#FFC400", "Gemini Flash"], ["#FF5A4F", "Astra"], ["#8B5CF6", "ElevenLabs"]];
+  const shade = (hex, f) => "#" + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * f).toString(16).padStart(2, "0")).join("");
+  iso.innerHTML = COLS.map(([c, n], i) => {
+    const cx = 300, cy = 150 + i * 135, w = 230, dh = 115, h = 44;
+    return `<g id="slab${i}">
+      <polygon points="${cx - w},${cy} ${cx},${cy + dh} ${cx},${cy + dh + h} ${cx - w},${cy + h}" fill="${shade(c, 0.78)}"/>
+      <polygon points="${cx},${cy + dh} ${cx + w},${cy} ${cx + w},${cy + h} ${cx},${cy + dh + h}" fill="${shade(c, 0.62)}"/>
+      <polygon points="${cx},${cy - dh} ${cx + w},${cy} ${cx},${cy + dh} ${cx - w},${cy}" fill="${c}"/>
+      <line x1="${cx + w + 14}" y1="${cy + 10}" x2="${cx + w + 70}" y2="${cy + 10}" stroke="#A6ABBD" stroke-width="3"/>
+      <text x="${cx + w + 84}" y="${cy + 21}" font-family="Inter" font-weight="700" font-size="34" fill="#14152B">${n}</text></g>`;
+  }).join("");
+  buildCues();
+}
+
+// ---------- per-scene renderers (lt = local time) ----------
+const R = {};
+R.s0 = (lt) => {
+  const k = K.s0;
+  for (const [id, t0] of [["h0a", k.a], ["h0b", k.b], ["h0c", k.c]]) {
+    const p = lin(lt, t0, t0 + 0.55);
+    st($(id), { o: clamp(p * 3), y: lerp(90, 0, eBack(p)), r: lerp(-6, 0, eBack(p)) });
+  }
+  appear($("sub0"), lt, k.sub);
+  const p = lin(lt, k.q, k.q + 0.7);
+  st($("q0"), { o: clamp(p * 3), y: lerp(-120, 0, eBack(p)) + Math.sin(lt * 2) * 8 * clamp(lt - k.q - 0.7), r: lerp(-14, 4, eBack(p)) + Math.sin(lt * 1.5) * 2 });
+};
+R.s1 = (lt) => {
+  const k = K.s1;
+  appear($("h1"), lt, k.h); appear($("sub1"), lt, k.sub);
+  appear($("c1a"), lt, k.ca, { dy: 60 }); appear($("c1b"), lt, k.cb, { dy: 60 });
+  const bt = Math.max(0, lt - k.run);
+  const A = bench({ t: bt, mode: "A" }), B = bench({ t: bt, mode: "B" });
+  $("b1a").innerHTML = A.svg; $("b1b").innerHTML = B.svg;
+  $("n1a").textContent = 0; $("n1b").textContent = B.count;
+};
+R.s2 = (lt) => {
+  const k = K.s2;
+  appear($("st2"), lt, k.tag); appear($("h2"), lt, k.h); appear($("sub2"), lt, k.sub);
+  chip($("ch2s"), lt, k.chS, null, 0); appear($("chat2"), lt, k.chat, { dy: 40 });
+  appear($("bq2"), lt, k.bq, { s0: 0.85 }); appear($("bl2"), lt, k.ba); appear($("ba2"), lt, k.ba, { s0: 0.85 });
+  chip($("ch2j"), lt, k.chJ, null, 1);
+  const pa = eOut(lin(lt, k.arr, k.arr + 0.5)); st($("arr2"), { o: pa, x: lerp(-30, 0, pa) });
+  appear($("db2"), lt, k.db, { dy: 0 });
+  for (const [id, t0] of [["r2a", k.ra], ["r2b", k.rb]]) { const p = lin(lt, t0, t0 + 0.6); st($(id), { o: clamp(p * 2.5), x: lerp(120, 0, eOut(p)) }); }
+  ["p2a", "p2b"].forEach((id, i) => { const p = lin(lt, k.pins + i * 0.25, k.pins + i * 0.25 + 0.5); st($(id), { o: clamp(p * 3), y: lerp(-60, 0, eBack(p)) }); });
+  appear($("saved2"), lt, k.saved, { s0: 0.8, dy: 20 });
+};
+R.s3 = (lt) => {
+  const k = K.s3;
+  appear($("st3"), lt, k.tag); appear($("h3"), lt, k.h); appear($("sub3"), lt, k.sub);
+  chip($("ch3s"), lt, k.chS, null, 0); appear($("live3"), lt, k.live, { dy: 40 });
+  $("b3").innerHTML = bench({ t: Math.max(0, lt - k.live), mode: "A", showBin: false }).svg;
+  $("rec3").style.opacity = Math.sin(lt * 6) > 0 ? 1 : 0.25;
+  appear($("lb3"), lt, k.lb, { dy: 10 });
+  for (let i = 0; i < 10; i++) {
+    const t0 = k.th + i * k.thStep, p = lin(lt, t0, t0 + 0.35);
+    const flown = lin(lt, k.fly + i * 0.05, k.fly + i * 0.05 + 0.2);
+    // originals stay (dimmed) once their copy has flown to Flash
+    st($("t3_" + i), { o: clamp(p * 3) * lerp(1, 0.4, flown), y: lerp(-150, 0, eOut(p)), x: lerp(150 - (i % 5) * 60, 0, eOut(p)), s: lerp(1.6, 1, eOut(p)) });
+    const f = lin(lt, k.fly + i * 0.05, k.fly + i * 0.05 + 0.75), fe = eInOut(f);
+    const sx = 100 + (i % 5) * 114, sy = 810 + Math.floor(i / 5) * 74;
+    st($("f3_" + i), { o: f > 0 && f < 1 ? 1 - fe * 0.6 : 0, x: lerp(0, 980 - sx, fe), y: lerp(0, 560 - sy, fe) - Math.sin(fe * Math.PI) * 160, s: lerp(1, 0.35, fe) });
+  }
+  chip($("ch3f"), lt, k.chF, null, 2); appear($("fl3"), lt, k.fl, { dy: 40 });
+  [...$("rows3").children].forEach((el, i) => appear(el, lt, k.rows[i], { dy: 14, dur: 0.35 }));
+  appear($("sep3"), lt, k.obs[0] - 0.2, { dy: 0 }); appear($("obl3"), lt, k.obs[0] - 0.2, { dy: 0 });
+  [...$("obs3").children].forEach((el, i) => appear(el, lt, k.obs[i], { dy: 14, dur: 0.4 }));
+  chip($("ch3j"), lt, k.chJ, null, 3); appear($("jv3"), lt, k.jv, { dy: 40 });
+  [...$("in3").children].forEach((el, i) => {
+    el.style.opacity = lerp(0.35, 1, lin(lt, k.comp, k.comp + 0.3));
+    const p = lin(lt, k.checks[i], k.checks[i] + 0.35); st(el.querySelector(".ck"), { o: clamp(p * 3), s: lerp(0.3, 1, eBack(p)) });
+  });
+  const am = lin(lt, k.amber, k.amber + 0.35);
+  st($("sg3"), { o: lin(lt, k.comp, k.comp + 0.3) * (lt < k.amber ? 1 : 0) });
+  st($("sa3"), { o: am, s: lerp(0.8, 1, eBack(am)) });
+  appear($("fn3"), lt, k.fn, { dy: 10 });
+};
+R.s4 = (lt) => {
+  const k = K.s4;
+  appear($("st4"), lt, k.tag); appear($("h4"), lt, k.h); appear($("sub4"), lt, k.sub);
+  // phase A
+  chip($("ch4j"), lt, k.chJ, k.outA, 0); appear($("jm4"), lt, k.jm, { out: k.outA });
+  chip($("ch4a"), lt, k.chA, k.outA, 1); appear($("as4"), lt, k.as, { out: k.outA });
+  const tv = eInOut(lin(lt, k.travel, k.travel + 1.0));
+  const bdIn = eOut(lin(lt, k.bd, k.bd + 0.5));
+  st($("bd4"), { o: bdIn * (1 - lin(lt, k.travel + 0.75, k.travel + 1.0)), x: lerp(0, 760, tv), y: (1 - bdIn) * 40 - Math.sin(tv * Math.PI) * 70, s: lerp(1, 0.32, tv) });
+  [...$("bdr4").children].forEach((el, i) => appear(el, lt, k.bdRows[i], { dy: 16, dur: 0.35 }));
+  const sc = lin(lt, k.scan, k.scan + 1.0);
+  st($("scan4"), { o: sc > 0 && sc < 1 ? 1 : 0, y: lerp(0, 120, (sc * 2) % 1) });
+  typeText($("gq4"), "Are you reassembling the same bracket?", lt, k.gq, 60);
+  appear($("gql4"), lt, k.gq - 0.2, { dy: 0 });
+  // phase B
+  chip($("ch4e"), lt, k.chE, k.outB, 2);
+  appear($("qb4"), lt, k.qb, { out: k.outB, s0: 0.92 });
+  appear($("ab4"), lt, k.ab, { out: k.outB, s0: 0.92 });
+  appear($("tr4"), lt, k.tr, { dy: 0, s0: 0.6 });
+  const t = lt + 46;
+  for (const [id, key, t0] of [["wq4", "q", T_Q], ["wa4", "a", T_A]]) {
+    [...$(id).children].forEach((bar, i) => {
+      const f = Math.floor((t - t0) * FPS) - i + 24, env = ENV[key];
+      const v = f >= 0 && f < env.length ? env[f] : 0;
+      bar.style.height = (6 + v * 50 * (0.75 + 0.25 * Math.sin(i * 1.7))).toFixed(1) + "px";
+      bar.style.opacity = t > t0 - 0.3 ? 1 : 0.4;
+    });
+  }
+  appear($("cx4"), lt, k.qb + 0.3, { dy: 30 });
+  const fp = lin(lt, k.flyStart, k.flyEnd), fe = eInOut(fp), fly = $("fly4");
+  fly.style.display = fp > 0 && fp < 1 ? "block" : "none";
+  st(fly, { o: 1, x: lerp(0, 1212, fe), y: lerp(0, -40, fe) - Math.sin(fe * Math.PI) * 120, s: lerp(1, 0.8, fe) });
+  appear($("cxa4"), lt, k.flyEnd - 0.1, { dy: 0, dur: 0.35 });
+  const ce = lin(lt, k.cxn, k.cxn + 0.4), cg = 0; st($("cxn4"), { o: ce * (1 - lin(lt, k.green, k.green + 0.3)) + cg, s: lerp(0.85, 1, eBack(ce)) });
+  // phase C
+  chip($("ch4s"), lt, k.chS, null, 3); appear($("nb4"), lt, k.nb, { dy: 40 });
+  const pan = eInOut(lin(lt, k.pan, k.pan + 0.9));
+  const B = bench({ t: Math.max(0, lt - k.cyc), mode: "B", base: 4, vx: lerp(-200, 0, pan) });
+  $("b4").innerHTML = B.svg;
+  appear($("nbl4"), lt, k.nb + 0.2, { dy: 10 });
+  for (let i = 0; i < 10; i++) { const p = lin(lt, k.thC + i * 0.08, k.thC + i * 0.08 + 0.3); st($("t4_" + i), { o: clamp(p * 3), y: lerp(-30, 0, eOut(p)) }); }
+  chip($("ch4f"), lt, k.chF, null, 4); appear($("fl4"), lt, k.fl, { dy: 40 });
+  appear($("o4a"), lt, k.o4a, { dy: 14 }); appear($("o4b"), lt, k.o4b, { dy: 14 });
+  appear($("jr4"), lt, k.jr, { dy: 40 });
+  const g = lin(lt, k.green, k.green + 0.35);
+  st($("ja4"), { o: lin(lt, k.jr, k.jr + 0.3) * (lt < k.green ? 1 : 0) });
+  st($("jg4"), { o: g, s: lerp(0.8, 1, eBack(g)) });
+  if (g > 0) { $("cxn4").className = "status s-green"; $("cxn4").innerHTML = '<span class="dot"></span>Concern resolved by new evidence'; st($("cxn4"), { o: g, s: lerp(0.85, 1, eBack(g)) }); }
+  else { $("cxn4").className = "status s-amber"; $("cxn4").innerHTML = '<span class="dot"></span>Context added · concern still open'; }
+  // phase-B elements that should be gone in phase C
+  for (const id of ["ch4e", "qb4", "ab4"]) if (lt > k.outB + 0.45) $(id).style.visibility = "hidden";
+  for (const id of ["ch4s", "nb4", "nbl4", "ch4f", "fl4", "jr4"]) if (lt < k.chS - 0.01) $(id).style.visibility = "hidden";
+  for (const id of ["ch4e", "qb4", "ab4"]) if (lt < k.chE - 0.01 && id === "ch4e") $(id).style.visibility = "hidden";
+};
+R.s5 = (lt) => {
+  const k = K.s5;
+  for (const [id, t0] of [["h5a", k.a], ["h5b", k.b]]) { const p = lin(lt, t0, t0 + 0.6); st($(id), { o: clamp(p * 3), y: lerp(80, 0, eBack(p)) }); }
+  appear($("sub5"), lt, k.sub);
+};
+R.s6 = (lt) => {
+  const k = K.s6;
+  for (let i = 0; i < 5; i++) {
+    const t0 = k.slabs + (4 - i) * k.slabStep; // bottom layer lands first
+    const p = lin(lt, t0, t0 + 0.6);
+    st($("slab" + i), { o: clamp(p * 4), y: lerp(-260, 0, eBack(p)) + Math.sin(lt * 1.8 + i) * 3 * clamp(lt - t0 - 0.6) });
+  }
+  appear($("h6"), lt, k.h); appear($("cta6"), lt, k.cta, { s0: 0.85 }); appear($("pn6"), lt, k.pn);
+};
+
+// ---------- frame ----------
+function render(t) {
+  t = clamp(t, 0, DURATION - 1e-6);
+  let top = 0;
+  SCENES.forEach(([id, s], i) => { if (t >= s) top = i; });
+  SCENES.forEach(([id, s, theme], i) => {
+    const el = $(id), next = SCENES[i + 1];
+    // visible: the top scene, plus the one under it while the top one wipes up
+    const wiping = i === top - 1 && t < SCENES[top][1] + WIPE;
+    if (i === top || wiping) {
+      el.style.display = "block";
+      el.style.zIndex = i;
+      const p = i === top && i > 0 ? eInOut(lin(t, s, s + WIPE)) : 1;
+      el.style.transform = `translateY(${((1 - p) * 1080).toFixed(1)}px)`;
+      R[id](t - s);
+    } else el.style.display = "none";
+  });
+  // overlays
+  const theme = SCENES[top][2], syn = $("synthetic");
+  syn.style.background = theme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(20,21,43,0.06)";
+  syn.style.color = theme === "dark" ? "#C9CDDB" : "#646A7E";
+  const sub = SUBS.find(([a, b]) => t >= a && t < b), subs = $("subs");
+  subs.innerHTML = sub ? `<div><small>${sub[2]}</small>${sub[3]}</div>` : "";
+  $("fade").style.opacity = lin(t, SCENES[6][1] + K.s6.fade, DURATION).toFixed(3);
+}
+
+window.TIMELINE = { duration: DURATION, fps: FPS, scenes: SCENES, speech: SPEECH, subs: SUBS, cues: CUES };
+window.render = render;
+setup();
+window.READY = document.fonts.ready.then(() => { render(0); return true; });
+
+// interactive preview (ignored by the renderer, which passes ?render)
+if (!location.search.includes("render")) {
+  const ui = $("ui"); ui.style.display = "block";
+  let t = 0, playing = true, last = performance.now();
+  const loop = (now) => { if (playing) t = (t + (now - last) / 1000) % DURATION; last = now; render(t); ui.firstChild.style.width = (t / DURATION * 100) + "%"; requestAnimationFrame(loop); };
+  addEventListener("keydown", (e) => { if (e.code === "Space") playing = !playing; });
+  ui.addEventListener("click", (e) => { t = e.clientX / innerWidth * DURATION; });
+  document.body.style.zoom = Math.min(innerWidth / 1920, innerHeight / 1080);
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
