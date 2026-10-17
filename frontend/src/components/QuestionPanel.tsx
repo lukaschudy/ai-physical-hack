@@ -120,30 +120,40 @@ export default function QuestionPanel({ sessionId, question, audioUrl, onAnswere
   };
 
   return (
-    <section aria-live="polite">
-      <p style={{ fontSize: "1.5rem", fontWeight: 600 }}>{question.text}</p>
+    <section className="card stack" aria-live="polite">
+      <p className="eyebrow">Astra asks</p>
+      <p style={{ fontSize: "1.5rem", fontWeight: 600, margin: 0 }}>{question.text}</p>
       <audio ref={audioEl} src={audioUrl} preload="auto" onPlay={() => setNeedsPlay(false)} />
-      {needsPlay && phase === "ready" && (
-        <button onClick={() => audioEl.current?.play().catch(() => {})}>Play question</button>
-      )}
-
-      {phase === "ready" && !failure && <button onClick={start}>Answer by voice</button>}
-      {phase === "recording" && (
-        <>
-          <button onClick={stop}>Stop</button>{" "}
-          <span role="timer">
-            Recording {formatTimer(elapsed)} / {formatTimer(MAX_ANSWER_S)}
-          </span>
-        </>
-      )}
+      <div className="row">
+        {needsPlay && phase === "ready" && (
+          <button onClick={() => audioEl.current?.play().catch(() => {})}>Play question</button>
+        )}
+        {phase === "ready" && !failure && (
+          <button className="primary" onClick={start}>
+            Answer by voice
+          </button>
+        )}
+        {phase === "recording" && (
+          <>
+            <button className="primary" onClick={stop}>
+              Stop
+            </button>
+            <span role="timer">
+              Recording {formatTimer(elapsed)} / {formatTimer(MAX_ANSWER_S)}
+            </span>
+          </>
+        )}
+      </div>
       {phase === "uploading" && <p>Transcribing…</p>}
       {phase === "done" && <p>You said: “{transcript}”</p>}
 
       {failure && (
-        <div role="alert">
+        <div role="alert" className="stack">
           <p>{failure.message}</p>
-          <button onClick={failure.kind === "mic" ? start : upload}>Retry</button>
-          {failure.kind === "upload" && <button onClick={start}>Record again</button>}
+          <div className="row">
+            <button onClick={failure.kind === "mic" ? start : upload}>Retry</button>
+            {failure.kind === "upload" && <button onClick={start}>Record again</button>}
+          </div>
         </div>
       )}
     </section>
