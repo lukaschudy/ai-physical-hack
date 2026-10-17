@@ -32,7 +32,7 @@ def load_settings() -> Settings:
         use_fakes=env("USE_FAKES", "1") == "1",
         data_dir=Path(env("DATA_DIR", "./var")),
         flash_model=env("FLASH_MODEL", "gemini-flash-latest"),
-        jev_model=env("JEV_MODEL", "gemini-flash-latest"),
+        jev_model=env("JEV_MODEL", "gemini-3.8-flash"),
         astra_model=env("ASTRA_MODEL", "claude-opus-5-5"),
         elevenlabs_voice_id=env("ELEVENLABS_VOICE_ID", ""),
         elevenlabs_tts_model=env("ELEVENLABS_TTS_MODEL", ""),
