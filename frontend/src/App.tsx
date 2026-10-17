@@ -21,14 +21,34 @@ function useHash() {
 export default function App() {
   const hash = useHash();
   const reviewId = hash.match(/^#\/sessions\/(\w+)/)?.[1];
-  if (reviewId) return <ReviewSession id={reviewId} />;
-  if (hash.startsWith("#/sessions"))
-    return (
-      <main>
-        <SessionsList onOpen={(id) => (location.hash = `#/sessions/${id}`)} />
+  const reviewing = hash.startsWith("#/sessions");
+  return (
+    <>
+      <header className="topbar">
+        <a className="brand" href="#/">
+          <span className="brand-mark" aria-hidden="true" />
+          Shift
+        </a>
+        <nav className="tabs" aria-label="Main">
+          <a href="#/" aria-current={reviewing ? undefined : "page"}>
+            Record
+          </a>
+          <a href="#/sessions" aria-current={reviewing ? "page" : undefined}>
+            Review
+          </a>
+        </nav>
+      </header>
+      <main className={reviewing ? "wide" : undefined}>
+        {reviewId ? (
+          <ReviewSession id={reviewId} />
+        ) : reviewing ? (
+          <SessionsList onOpen={(id) => (location.hash = `#/sessions/${id}`)} />
+        ) : (
+          <ContributorFlow />
+        )}
       </main>
-    );
-  return <ContributorFlow />;
+    </>
+  );
 }
 
 function ContributorFlow() {
@@ -36,8 +56,8 @@ function ContributorFlow() {
   const [pending, setPending] = useState<{ question: Question; audioUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (!session) return <main><TaskForm onStarted={setSession} /></main>;
-  if (session.status === "finished") return <main><VerdictView session={session} /></main>;
+  if (!session) return <TaskForm onStarted={setSession} />;
+  if (session.status === "finished") return <VerdictView session={session} />;
 
   const onBatch = (r: BatchResult) => {
     setSession((s) => (s ? { ...s, batches: [...s.batches, r.batch] } : s));
@@ -48,8 +68,11 @@ function ContributorFlow() {
   const finish = () => api.finish(session.id).then(setSession, (e) => setError(String(e)));
 
   return (
-    <main>
-      <h1>{session.task}</h1>
+    <div className="stack">
+      <div>
+        <p className="eyebrow">Recording</p>
+        <h1>{session.task}</h1>
+      </div>
       <Recorder sessionId={session.id} paused={pending !== null} onBatch={onBatch} onError={setError} />
       {pending && (
         <QuestionPanel
@@ -59,11 +82,11 @@ function ContributorFlow() {
           onAnswered={() => setPending(null)}
         />
       )}
-      <button onClick={finish} disabled={pending !== null}>
+      {error && <p role="alert">{error}</p>}
+      <button className="block" onClick={finish} disabled={pending !== null}>
         Finish task
       </button>
-      {error && <p role="alert">{error}</p>}
-    </main>
+    </div>
   );
 }
 
@@ -72,5 +95,10 @@ function ReviewSession({ id }: { id: string }) {
   useEffect(() => {
     api.getSession(id).then(setSession);
   }, [id]);
-  return <main>{session ? <VerdictView session={session} /> : <p>Loading…</p>}</main>;
+  return (
+    <div className="stack">
+      <a href="#/sessions">← All sessions</a>
+      {session ? <VerdictView session={session} /> : <p className="muted">Loading…</p>}
+    </div>
+  );
 }
